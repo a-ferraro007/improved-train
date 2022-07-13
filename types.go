@@ -16,7 +16,7 @@ type Pool struct {
 	unregister chan *Client
 	activeTrains map[string][]map[uuid.UUID]*Client
 	activeTrainChannel chan string
-	lastStopTimeUpdate map[string]Message
+	cachedStopTimeUpdate map[string]Message
 }
 
 type Client struct {

@@ -109,7 +109,7 @@ func fetch(client *http.Client, req *http.Request, stopId string) []*Train {
 			if train.Train.TimeInMinutes >= 0 {
 				trainSlice = append(trainSlice, train)
 			} else {
-				log.Println(train.Train.TimeInMinutes)
+				log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
 			}
 		}
 	}
