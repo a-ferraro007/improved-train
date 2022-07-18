@@ -13,6 +13,8 @@ func returnTrainSlice(stopTimeUpdateSlice []*StopTimeUpdate) []*Train {
 
 	for _, trip := range stopTimeUpdateSlice {
 		var train = &Train{}
+
+		//Create helper for this to parse Northbound & Southbound trains
 		if (strings.Count(trip.Id, "N") >= 1 && strings.Count(trip.Id, "N") <= 2) {
 			train.Train = trip
 			train.Direction = "Manhattan"
@@ -30,12 +32,14 @@ func returnTrainSlice(stopTimeUpdateSlice []*StopTimeUpdate) []*Train {
 			train.Train.ConvertDeparture()
 			train.Train.ConvertTimeInMinutes()
 		}
+
 		if train.Train.TimeInMinutes >= 0 {
 			trainSlice = append(trainSlice, train)
 		} else {
 			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
 		}
 	}
+	log.Printf("TRAIN SLICE: %v\n", trainSlice)
 	return trainSlice
 }
 
@@ -44,7 +48,7 @@ func returnTrainSlice(stopTimeUpdateSlice []*StopTimeUpdate) []*Train {
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}
-
+	//log.Printf("CLIENT STOP ID: %v\n UPDATE STOP ID: %v\n", stopID, update.GetStopId())
 	if strings.Contains(update.GetStopId(), stopID) {
 		match = true
 

@@ -75,9 +75,7 @@ func fetch(client *http.Client, req *http.Request) []*gtfs.TripUpdate_StopTimeUp
 	for _, entity := range feed.Entity {
 		tripUpdate := entity.TripUpdate
 		if tripUpdate != nil {
-			//for _, stopTimeUpdate := range tripUpdate.GetStopTimeUpdate() {
-				stopTimeUpdateSlice = tripUpdate.GetStopTimeUpdate()  //append(stopTimeUpdateSlice, stopTimeUpdate)
-			//}
+			stopTimeUpdateSlice = append(stopTimeUpdateSlice, tripUpdate.GetStopTimeUpdate()...)
 		}
 	}
 

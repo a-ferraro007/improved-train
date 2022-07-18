@@ -10,38 +10,38 @@ import (
 )
 
 type Pool struct {
-	subwayLine string
-	clients map[*Client]bool
-	broadcast chan Message //[]byte
-	broadcastV2 chan []*gtfs.TripUpdate_StopTimeUpdate
-	register chan *Client
-	unregister chan *Client
-	activeTrains map[string][]map[uuid.UUID]*Client
-	activeTrainChannel chan string
-	cachedStopTimeUpdate map[string]Message
+	subwayLine             string
+	clients                map[uuid.UUID]*Client
+	broadcast              chan Message //[]byte
+	broadcastV2            chan []*gtfs.TripUpdate_StopTimeUpdate
+	register               chan *Client
+	unregister             chan *Client
+	activeTrains           map[string][]map[uuid.UUID]*Client
+	activeTrainChannel     chan string
+	cachedStopTimeUpdate   map[string]Message
 	cachedStopTimeUpdateV2 map[string][]*gtfs.TripUpdate_StopTimeUpdate
 }
 
 type Client struct {
-	UUID uuid.UUID
-	pool *Pool
-	conn *websocket.Conn
-	send chan Message//[]byte
-	sendV2 chan []*gtfs.TripUpdate_StopTimeUpdate
-	stopId string
+	UUID       uuid.UUID
+	pool       *Pool
+	conn       *websocket.Conn
+	send       chan Message //[]byte
+	sendV2     chan []*gtfs.TripUpdate_StopTimeUpdate
+	stopId     string
 	subwayLine string
-	fetching bool
-	poolMap PoolClient
+	fetching   bool
+	//poolMap    PoolClient
 }
 
 type PoolClient struct {
-	pool *Pool
+	pool    *Pool
 	poolMap *map[string]*Pool
 }
 
 type Message struct {
-	Message ArrivingTrain//[string]interface{}
-	Client *Client
+	Message ArrivingTrain //[string]interface{}
+	Client  *Client
 }
 
 type RespMsg struct {
@@ -49,26 +49,26 @@ type RespMsg struct {
 }
 
 type StopTimeUpdate struct {
-	Id string `json:"id"`
-	ArrivalTime *int64 `json:"arrivalTime"`
-	DepartureTime *int64 `json:"departureTime"`
-	Delay int32 `json:"delay"`
-	ArrivalTimeWithDelay int64 `json:"arrivalTimeDelay"`
-	ConvertedArrivalTime time.Time `json:"convertedArrivalTime"`
-	ConvertedDepartureTime time.Time `json:"convertedDepartureTime"`
-	TimeInMinutes float64  `json:"timeInMinutes"`
-	GtfsDeparture *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
+	Id                     string                         `json:"id"`
+	ArrivalTime            *int64                         `json:"arrivalTime"`
+	DepartureTime          *int64                         `json:"departureTime"`
+	Delay                  int32                          `json:"delay"`
+	ArrivalTimeWithDelay   int64                          `json:"arrivalTimeDelay"`
+	ConvertedArrivalTime   time.Time                      `json:"convertedArrivalTime"`
+	ConvertedDepartureTime time.Time                      `json:"convertedDepartureTime"`
+	TimeInMinutes          float64                        `json:"timeInMinutes"`
+	GtfsDeparture          *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
 }
 
 func (s *StopTimeUpdate) ConvertArrival() {
-	s.ConvertedArrivalTime = time.Unix(int64(s.ArrivalTimeWithDelay),0)
+	s.ConvertedArrivalTime = time.Unix(int64(s.ArrivalTimeWithDelay), 0)
 }
 
 func (s *StopTimeUpdate) ConvertDeparture() {
-	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime + int64(*s.GtfsDeparture.Delay)),0)
+	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(*s.GtfsDeparture.Delay)), 0)
 }
 
-func(s *StopTimeUpdate) AddDelay() {
+func (s *StopTimeUpdate) AddDelay() {
 	s.ArrivalTimeWithDelay = *s.ArrivalTime + int64(s.Delay)
 }
 
@@ -77,17 +77,17 @@ func (s *StopTimeUpdate) ConvertTimeInMinutes() {
 }
 
 type ArrivingTrain struct {
-	ClientID uuid.UUID `json:"clientId"`
-	SubwayLine string `json:"subwayLine"`
-	Trains []*Train `json:"trains"`
+	ClientID   uuid.UUID `json:"clientId"`
+	SubwayLine string    `json:"subwayLine"`
+	Trains     []*Train  `json:"trains"`
 }
 
 type Train struct {
-	Direction string `json:"direction"`
-	Train *StopTimeUpdate `json:"train"`
+	Direction string          `json:"direction"`
+	Train     *StopTimeUpdate `json:"train"`
 }
 
-type ServiceAlertHeader struct {}
+type ServiceAlertHeader struct{}
 
 type Resp struct {
 	Header struct {

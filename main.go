@@ -3,31 +3,42 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
+var Pools PoolMap
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 func main() {
-  poolTrainMap := make(map[string]*Pool)
+	Pools.Init()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("WEBSOCKET REQUST", r)
-		subwayLine := r.URL.Query()["subwayLine"][0]
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Printf("ERROR UPGRADING WEBSOCKET: %v", err)
+			return
+		}
 
-		if poolTrainMap[subwayLine] == nil {
-			log.Println("RUN POOL", r)
-			pool := newPool(subwayLine)
-			poolTrainMap[subwayLine] = pool
-			go pool.run()
-			addClientToPool(pool, w, r, &poolTrainMap)
+		subwayLine := r.URL.Query()["subwayLine"][0]
+		stopId := r.URL.Query()["stopId"][0]
+
+		if Pools.Map[subwayLine] == nil {
+			Pools.createPool(subwayLine)
+			Pools.insertIntoPool(subwayLine, stopId, conn)
 		} else {
-			log.Printf("ADD TO POOL %v\n", poolTrainMap)
-			pool := poolTrainMap[subwayLine]
-			addClientToPool(pool, w, r,  &poolTrainMap)
+			Pools.insertIntoPool(subwayLine, stopId, conn)
 		}
 	})
 
-	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request){
+	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
 		//log.Println("TRASNIT DATE")
 		//(w).Header().Set("Access-Control-Allow-Origin", "*")
 		//if r.Method == http.MethodOptions{
@@ -36,7 +47,7 @@ func main() {
 		//	log.Println(r.Method)
 		//}
 		//data := transitTimes("L", "L12", uuid.New())
-		////log.Printf("%+v",data)
+		//log.Printf("%+v",data)
 		//json, _ := json.Marshal(data)
 		//w.Header().Set("Content-Type", "application/json")
 		//w.Write(json)
@@ -46,8 +57,6 @@ func main() {
 		log.Println(w, "Hello, i'm a golang microservice")
 	})
 
-
 	log.Println("Server Running On Port :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
