@@ -10,33 +10,27 @@ import (
 )
 
 type Pool struct {
-	subwayLine             string
-	clients                map[uuid.UUID]*Client
-	broadcast              chan Message //[]byte
-	broadcastV2            chan []*gtfs.TripUpdate_StopTimeUpdate
-	register               chan *Client
-	unregister             chan *Client
-	activeTrains           map[string][]map[uuid.UUID]*Client
-	activeTrainChannel     chan string
-	cachedStopTimeUpdate   map[string]Message
-	cachedStopTimeUpdateV2 map[string][]*gtfs.TripUpdate_StopTimeUpdate
+	subwayLine           string
+	clients              map[uuid.UUID]*Client
+	broadcast            chan []*gtfs.TripUpdate_StopTimeUpdate
+	register             chan *Client
+	unregister           chan *Client
+	activeTrains         map[string][]map[uuid.UUID]*Client
+	activeTrainChannel   chan string
+	cachedStopTimeUpdate map[string][]*gtfs.TripUpdate_StopTimeUpdate
+	ticker               *time.Ticker
+	done                 chan bool
 }
 
 type Client struct {
 	UUID       uuid.UUID
 	pool       *Pool
 	conn       *websocket.Conn
-	send       chan Message //[]byte
-	sendV2     chan []*gtfs.TripUpdate_StopTimeUpdate
+	send       chan []*gtfs.TripUpdate_StopTimeUpdate
 	stopId     string
 	subwayLine string
 	fetching   bool
 	//poolMap    PoolClient
-}
-
-type PoolClient struct {
-	pool    *Pool
-	poolMap *map[string]*Pool
 }
 
 type Message struct {

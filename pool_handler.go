@@ -42,15 +42,14 @@ func (p *PoolMap) insertIntoPool(subwayLine string, stopId string, conn *websock
 		UUID:       uuid.New(),
 		pool:       pool,
 		conn:       conn,
-		send:       make(chan Message), //make(chan []byte),
-		sendV2:     make(chan []*gtfs.TripUpdate_StopTimeUpdate),
+		send:       make(chan []*gtfs.TripUpdate_StopTimeUpdate),
 		stopId:     stopId,
 		subwayLine: subwayLine,
 		fetching:   false,
 	}
-	//pool.activeTrains[client.subwayLine] = append(pool.activeTrains[client.subwayLine], newClient)
+
 	mV2 := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
-	mV2 = pool.cachedStopTimeUpdateV2[client.subwayLine]
+	mV2 = pool.cachedStopTimeUpdate[client.subwayLine]
 	pool.register <- client
 	go client.read()
 	go client.writeV2(&mV2)
@@ -59,6 +58,7 @@ func (p *PoolMap) insertIntoPool(subwayLine string, stopId string, conn *websock
 func (p *PoolMap) deletePool(subwayLine string) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
-
+	p.Map[subwayLine].done <- true
 	delete(p.Map, subwayLine)
+	log.Println("POOL MAP: ", p.Map)
 }
