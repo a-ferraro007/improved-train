@@ -10,12 +10,13 @@ import (
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	proto "github.com/golang/protobuf/proto"
-	"github.com/google/uuid"
 )
 
-func transitTimes(subwayLine string, stopId string, id uuid.UUID) ArrivingTrain {
+//ArrivingTrain
+func transitTimes(subwayLine string) []*gtfs.TripUpdate_StopTimeUpdate {
 	client := &http.Client{}
-	var arrivingTrain = &ArrivingTrain{}
+	//var arrivingTrain = &ArrivingTrain{}
+	var stopTimeUpdateSlice []*gtfs.TripUpdate_StopTimeUpdate
 
 	alertReqURL := SUBWAY_LINE_REQUEST_URLS["SERVICE"]
 	req, err := http.NewRequest("GET", alertReqURL, nil)
@@ -24,7 +25,7 @@ func transitTimes(subwayLine string, stopId string, id uuid.UUID) ArrivingTrain 
 	if err != nil {
 		log.Println("LINE 104")
 		log.Default().Println(err)
-		return *arrivingTrain
+		return stopTimeUpdateSlice
 	}
 
 	reqURL := SUBWAY_LINE_REQUEST_URLS[subwayLine]
@@ -34,24 +35,23 @@ func transitTimes(subwayLine string, stopId string, id uuid.UUID) ArrivingTrain 
 	if err2 != nil {
 		log.Println("LINE 113")
 		log.Default().Println(err2)
-		return *arrivingTrain
+		return stopTimeUpdateSlice
 	}
 
-	arrivingTrain.ClientID = id
-	arrivingTrain.SubwayLine = subwayLine
-	arrivingTrain.Trains = fetch(client, req2, stopId)
-	return *arrivingTrain
+	//arrivingTrain.ClientID = id
+	//arrivingTrain.SubwayLine = subwayLine
+	//arrivingTrain.Trains = fetch(client, req2)
+	return fetch(client, req2) //*arrivingTrain
 }
-
-func fetch(client *http.Client, req *http.Request, stopId string) []*Train {
-	var stopTimeUpdateSlice []*StopTimeUpdate
-	trainSlice := make([]*Train, 0)
+//[]*Train
+func fetch(client *http.Client, req *http.Request) []*gtfs.TripUpdate_StopTimeUpdate {
+	var stopTimeUpdateSlice []*gtfs.TripUpdate_StopTimeUpdate //[]*StopTimeUpdate
 	resp, err := client.Do(req)
 
 	if err != nil {
 		log.Println("LINE 128")
 		log.Default().Println(err)
-		return trainSlice
+		return stopTimeUpdateSlice
 	}
 
 	defer resp.Body.Close()
@@ -60,7 +60,7 @@ func fetch(client *http.Client, req *http.Request, stopId string) []*Train {
 	if err != nil {
 		log.Println("LINE 137")
 		log.Default().Println(err)
-		return trainSlice
+		return stopTimeUpdateSlice
 	}
 
 	feed := gtfs.FeedMessage{}
@@ -69,74 +69,19 @@ func fetch(client *http.Client, req *http.Request, stopId string) []*Train {
 	if err != nil {
 		log.Println("LINE 145")
 		log.Default().Println(err)
-		return trainSlice
+		return stopTimeUpdateSlice
 	}
 
 	for _, entity := range feed.Entity {
 		tripUpdate := entity.TripUpdate
 		if tripUpdate != nil {
-			for _, tripUpdate := range tripUpdate.GetStopTimeUpdate() {
-			 match, stopTimeUpdate := findStopData(tripUpdate, stopId)
-				if match {
-					stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
-				}
-			}
+			stopTimeUpdateSlice = append(stopTimeUpdateSlice, tripUpdate.GetStopTimeUpdate()...)
 		}
 	}
 
-	if len(stopTimeUpdateSlice) != 0 {
-		//log.Println(len(stopTimeUpdateSlice))
-		for _, trip := range stopTimeUpdateSlice {
-			var train = &Train{}
-
-			if (strings.Count(trip.Id, "N") >= 1 && strings.Count(trip.Id, "N") <= 2) {
-				train.Train = trip
-				train.Direction = "Manhattan"
-				train.Train.AddDelay()
-				train.Train.ConvertArrival()
-				train.Train.ConvertDeparture()
-				train.Train.ConvertTimeInMinutes()
-			}
-
-			if (strings.Count(trip.Id, "S") >= 1 && strings.Count(trip.Id, "S") <= 2) {
-				train.Train = trip
-				train.Direction = "Brooklyn"
-				train.Train.AddDelay()
-				train.Train.ConvertArrival()
-				train.Train.ConvertDeparture()
-				train.Train.ConvertTimeInMinutes()
-			}
-			if train.Train.TimeInMinutes >= 0 {
-				trainSlice = append(trainSlice, train)
-			} else {
-				log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
-			}
-		}
-	}
-	return trainSlice
+	return stopTimeUpdateSlice
 }
 
-func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
-	match := false
-	stopTimeUpdate := StopTimeUpdate{}
-
-	if strings.Contains(update.GetStopId(), stopID) {
-		match = true
-
-		if update.GetDeparture() != nil {
-			stopTimeUpdate.Id = update.GetStopId()
-			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-			stopTimeUpdate.Delay = update.GetDeparture().GetDelay()
-			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
-		} else {
-			fmt.Println("NO DEPARTURE")
-			stopTimeUpdate.Id = update.GetStopId()
-			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-		}
-	}
-		return match, &stopTimeUpdate
-}
 
 func getServiceError(client *http.Client, req *http.Request)  {
 	resp, err := client.Do(req)
