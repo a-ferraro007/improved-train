@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"sync"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -29,12 +30,25 @@ type Client struct {
 	send       chan []*gtfs.TripUpdate_StopTimeUpdate
 	stopId     string
 	subwayLine string
+	config     Config
 	fetching   bool
-	//poolMap    PoolClient
+}
+
+type Config struct {
+	stopId     string
+	subwayLine string
+	sort       string
+	funct      func(parsed ParsedByDirection) ParsedByDirection
+}
+type SortPrototype func(parsed ParsedByDirection) ParsedByDirection
+
+type PoolMap struct {
+	Mutex sync.RWMutex
+	Map   map[string]*Pool
 }
 
 type Message struct {
-	Message ArrivingTrain //[string]interface{}
+	Message ArrivingTrain
 	Client  *Client
 }
 
@@ -43,6 +57,7 @@ type RespMsg struct {
 }
 
 type StopTimeUpdate struct {
+	Trip                   *gtfs.TripDescriptor           `json:"trip"`
 	Id                     string                         `json:"id"`
 	ArrivalTime            *int64                         `json:"arrivalTime"`
 	DepartureTime          *int64                         `json:"departureTime"`
@@ -71,14 +86,21 @@ func (s *StopTimeUpdate) ConvertTimeInMinutes() {
 }
 
 type ArrivingTrain struct {
-	ClientID   uuid.UUID `json:"clientId"`
-	SubwayLine string    `json:"subwayLine"`
-	Trains     []*Train  `json:"trains"`
+	ClientID     uuid.UUID         `json:"clientId"`
+	SubwayLine   string            `json:"subwayLine"`
+	Trains       []*Train          `json:"trains"` //Return all trains so the client can do custom parsing
+	ParsedTrains ParsedByDirection `json:"parsedTrains"`
 }
 
 type Train struct {
-	Direction string          `json:"direction"`
-	Train     *StopTimeUpdate `json:"train"`
+	DirectionV2 string          `json:"directionV2"`
+	Direction   string          `json:"direction"`
+	Train       *StopTimeUpdate `json:"train"`
+}
+
+type ParsedByDirection struct {
+	Northbound []*Train `json:"northbound"` //Trains will be sorted in the order sent with WS req
+	SouthBound []*Train `json:"southbound"` //Trains will be sorted in the order sent with WS req
 }
 
 type ServiceAlertHeader struct{}

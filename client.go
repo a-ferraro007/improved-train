@@ -31,31 +31,34 @@ func (client *Client) read() {
 	}
 }
 
-func (client *Client) writeV2(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
+func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 	defer log.Printf("Closing Write Client: %v \n", client.UUID)
 
 	stopTimeUpdateSlice := make([]*StopTimeUpdate, 0)
-	arrivingTrain := &ArrivingTrain{ClientID: client.UUID, SubwayLine: client.subwayLine}
+	arrivingTrain := &ArrivingTrain{ClientID: client.UUID, SubwayLine: client.config.subwayLine}
 
 	if len(*cachedGTFSData) != 0 {
 		log.Printf("CACHE HIT: %v\n", client.UUID)
 		for _, tripUpdate := range *cachedGTFSData {
-			match, stopTimeUpdate := findStopData(tripUpdate, client.stopId)
+			match, stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
 			if match {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}
 
 		if len(stopTimeUpdateSlice) > 0 {
-			arrivingTrain.Trains = returnTrainSlice(stopTimeUpdateSlice)
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+			arrivingTrain.Trains = unparsed
+			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
+
 		i := 0
 		for i < 2 {
-			writeJSON(client, Message{Client: client, Message: *arrivingTrain})
+			client.writeJSON(Message{Client: client, Message: *arrivingTrain})
 			i++
 		}
 	}
-
+	log.Println("FETCH")
 	for {
 		data, ok := <-client.send
 		//log.Printf("DATA RECEIVED FOR CLIENT: %v\n", client.UUID)
@@ -67,21 +70,25 @@ func (client *Client) writeV2(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate)
 		stopTimeUpdateSlice = make([]*StopTimeUpdate, 0)
 
 		for _, tripUpdate := range data {
-			match, stopTimeUpdate := findStopData(tripUpdate, client.stopId)
+			match, stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
 			if match {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}
-
+		log.Println("FETCH 2", stopTimeUpdateSlice)
 		if len(stopTimeUpdateSlice) > 0 {
-			arrivingTrain.Trains = returnTrainSlice(stopTimeUpdateSlice)
+			log.Println("FETCH 3")
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+			arrivingTrain.Trains = unparsed
+			log.Println("FETCH 4", unparsed)
+			arrivingTrain.ParsedTrains = parsed
 		}
-
-		writeJSON(client, Message{Client: client, Message: *arrivingTrain})
+		log.Println("WRITE JSON")
+		client.writeJSON(Message{Client: client, Message: *arrivingTrain})
 	}
 }
 
-func writeJSON(client *Client, msg Message) {
+func (client *Client) writeJSON(msg Message) {
 	w, errWriter := client.conn.NextWriter(websocket.TextMessage)
 	if errWriter != nil {
 		log.Println(errWriter)
@@ -99,4 +106,13 @@ func writeJSON(client *Client, msg Message) {
 		return
 	}
 	log.Printf("JSON: %v\n bytes written: %v\n", msg.Message, l)
+}
+
+//This is probably really over kill but this lets you write special
+//parsers/sorters serverside and apply them to multiple clients at once.
+//Eventaully use an enum/constant for the sort configurations/functions.
+func (client *Client) configureSort() {
+	if client.config.sort == "ascend" {
+		client.config.funct = sort
+	}
 }

@@ -8,39 +8,41 @@ import (
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
 
-func returnTrainSlice(stopTimeUpdateSlice []*StopTimeUpdate) []*Train {
-	trainSlice := make([]*Train, 0)
-
+func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Train, ParsedByDirection) {
+	unparsed := make([]*Train, 0)
+	parsed := ParsedByDirection{}
+	log.Println("unparsed")
 	for _, trip := range stopTimeUpdateSlice {
-		var train = &Train{}
+		train := &Train{}
+		train.Train = trip
+		train.Train.AddDelay()
+		train.Train.ConvertArrival()
+		train.Train.ConvertDeparture()
+		train.Train.ConvertTimeInMinutes()
+		if train.Train.TimeInMinutes < 0 {
+			log.Println("neg", train.Train)
+			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
+			continue
+		}
+
+		idSplit := strings.Split(trip.Id, "")
+		direction := strings.ToLower(idSplit[len(idSplit)-1])
 
 		//Create helper for this to parse Northbound & Southbound trains
-		if strings.Count(trip.Id, "N") >= 1 && strings.Count(trip.Id, "N") <= 2 {
-			train.Train = trip
+		if direction == "n" {
 			train.Direction = "Manhattan"
-			train.Train.AddDelay()
-			train.Train.ConvertArrival()
-			train.Train.ConvertDeparture()
-			train.Train.ConvertTimeInMinutes()
-		}
-
-		if strings.Count(trip.Id, "S") >= 1 && strings.Count(trip.Id, "S") <= 2 {
-			train.Train = trip
+			train.DirectionV2 = "N" //Use an Enum for this?
+			parsed.Northbound = append(parsed.Northbound, train)
+		} else if direction == "s" {
 			train.Direction = "Brooklyn"
-			train.Train.AddDelay()
-			train.Train.ConvertArrival()
-			train.Train.ConvertDeparture()
-			train.Train.ConvertTimeInMinutes()
+			train.DirectionV2 = "S" //Use an Enum for this?
+			parsed.SouthBound = append(parsed.SouthBound, train)
 		}
 
-		if train.Train.TimeInMinutes >= 0 {
-			trainSlice = append(trainSlice, train)
-		} else {
-			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
-		}
+		unparsed = append(unparsed, train)
 	}
-	//log.Printf("TRAIN SLICE: %v\n", trainSlice)
-	return trainSlice
+
+	return unparsed, parsed
 }
 
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
@@ -64,4 +66,9 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 	}
 
 	return match, &stopTimeUpdate
+}
+
+func sort(parsed ParsedByDirection) ParsedByDirection {
+	log.Println("SORT")
+	return parsed
 }
