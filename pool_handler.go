@@ -42,7 +42,8 @@ func (p *PoolMap) insertIntoPool(subwayLine string, stopId string, conn *websock
 		config:     Config{stopId: stopId, subwayLine: subwayLine, sort: "ascending"},
 		fetching:   false,
 	}
-	//client.configureSort()
+	client.configureSort()
+	client.configureGenerator()
 
 	mV2 := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
 	mV2 = pool.cachedStopTimeUpdate[client.config.subwayLine]

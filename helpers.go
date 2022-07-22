@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
@@ -11,7 +13,6 @@ import (
 func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Train, ParsedByDirection) {
 	unparsed := make([]*Train, 0)
 	parsed := ParsedByDirection{}
-	log.Println("unparsed")
 	for _, trip := range stopTimeUpdateSlice {
 		train := &Train{}
 		train.Train = trip
@@ -68,7 +69,24 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 	return match, &stopTimeUpdate
 }
 
-func sort(parsed ParsedByDirection) ParsedByDirection {
-	log.Println("SORT")
+func defaultSort(parsed ParsedByDirection) ParsedByDirection {
+	log.Println("DEFAULT SORT", time.Now())
+	sort.SliceStable(parsed.Northbound, func(i, j int) bool {
+		return parsed.Northbound[i].Train.TimeInMinutes < parsed.SouthBound[j].Train.TimeInMinutes
+	})
+
+	sort.SliceStable(parsed.SouthBound, func(i, j int) bool {
+		return parsed.SouthBound[i].Train.TimeInMinutes < parsed.SouthBound[j].Train.TimeInMinutes
+	})
+
+	return parsed
+}
+
+func descendingSort(parsed ParsedByDirection) ParsedByDirection {
+	log.Println("DESCENDING SORT", time.Now())
+	return parsed
+}
+
+func testGen(parsed ParsedByDirection) ParsedByDirection {
 	return parsed
 }

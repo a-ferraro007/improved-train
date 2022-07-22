@@ -49,7 +49,11 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		if len(stopTimeUpdateSlice) > 0 {
 			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
 			arrivingTrain.Trains = unparsed
-			arrivingTrain.ParsedTrains = client.config.funct(parsed)
+			if client.config.generator != nil {
+				arrivingTrain.ParsedTrains = client.config.generator(client.config.funct(parsed))
+			} else {
+				arrivingTrain.ParsedTrains = client.config.funct(parsed)
+			}
 		}
 
 		i := 0
@@ -61,7 +65,6 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 	log.Println("FETCH")
 	for {
 		data, ok := <-client.send
-		//log.Printf("DATA RECEIVED FOR CLIENT: %v\n", client.UUID)
 		if !ok {
 			client.conn.WriteMessage(websocket.CloseMessage, []byte{})
 			return
@@ -75,15 +78,17 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}
-		log.Println("FETCH 2", stopTimeUpdateSlice)
+
 		if len(stopTimeUpdateSlice) > 0 {
-			log.Println("FETCH 3")
 			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
 			arrivingTrain.Trains = unparsed
-			log.Println("FETCH 4", unparsed)
-			arrivingTrain.ParsedTrains = parsed
+			if client.config.generator != nil {
+				arrivingTrain.ParsedTrains = client.config.generator(client.config.funct(parsed))
+			} else {
+				arrivingTrain.ParsedTrains = client.config.funct(parsed)
+			}
 		}
-		log.Println("WRITE JSON")
+
 		client.writeJSON(Message{Client: client, Message: *arrivingTrain})
 	}
 }
@@ -111,8 +116,22 @@ func (client *Client) writeJSON(msg Message) {
 //This is probably really over kill but this lets you write special
 //parsers/sorters serverside and apply them to multiple clients at once.
 //Eventaully use an enum/constant for the sort configurations/functions.
+//Can probably use this to return custom data types i.e. mixing train times
+// and service alert information.
 func (client *Client) configureSort() {
-	if client.config.sort == "ascend" {
-		client.config.funct = sort
+	switch client.config.sort {
+	case "descending":
+		client.config.funct = descendingSort
+	default:
+		client.config.funct = defaultSort
+	}
+}
+
+func (client *Client) configureGenerator() {
+	switch client.config.generate {
+	case "test":
+		client.config.generator = testGen
+	default:
+		client.config.generator = nil
 	}
 }

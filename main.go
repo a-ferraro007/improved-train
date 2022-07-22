@@ -48,7 +48,6 @@ func main() {
 			log.Println(r.Method)
 		}
 		data := transitTimes("L")
-		//log.Printf("%+v", data)
 		json, _ := json.Marshal(data)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)

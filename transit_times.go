@@ -70,5 +70,6 @@ func fetch(client *http.Client, req *http.Request) []*gtfs.TripUpdate_StopTimeUp
 		}
 	}
 
+	//log.Println(stopTimeUpdateSlice)
 	return stopTimeUpdateSlice
 }

@@ -38,7 +38,11 @@ type Config struct {
 	stopId     string
 	subwayLine string
 	sort       string
+	generate   string
 	funct      func(parsed ParsedByDirection) ParsedByDirection
+	generator  func(parsed ParsedByDirection) ParsedByDirection
+	//use this generator property to keep custom property generators
+	//seperate of the sorting function config property.
 }
 type SortPrototype func(parsed ParsedByDirection) ParsedByDirection
 
@@ -74,7 +78,7 @@ func (s *StopTimeUpdate) ConvertArrival() {
 }
 
 func (s *StopTimeUpdate) ConvertDeparture() {
-	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(*s.GtfsDeparture.Delay)), 0)
+	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
 }
 
 func (s *StopTimeUpdate) AddDelay() {
@@ -82,7 +86,7 @@ func (s *StopTimeUpdate) AddDelay() {
 }
 
 func (s *StopTimeUpdate) ConvertTimeInMinutes() {
-	s.TimeInMinutes = math.Round(time.Until(s.ConvertedArrivalTime).Minutes())
+	s.TimeInMinutes = math.Floor(time.Until(s.ConvertedArrivalTime).Minutes()) + 1
 }
 
 type ArrivingTrain struct {
@@ -99,8 +103,11 @@ type Train struct {
 }
 
 type ParsedByDirection struct {
-	Northbound []*Train `json:"northbound"` //Trains will be sorted in the order sent with WS req
-	SouthBound []*Train `json:"southbound"` //Trains will be sorted in the order sent with WS req
+	Northbound []*Train `json:"northbound"` //sorted by the default sorting
+	SouthBound []*Train `json:"southbound"` //sorted by the default sorting
+	//Add ability to attach a custom data type here so I can
+	//use the config struct to write functions that can combine
+	//different data feeds into a single return object.
 }
 
 type ServiceAlertHeader struct{}
