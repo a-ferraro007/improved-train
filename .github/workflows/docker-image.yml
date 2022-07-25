@@ -45,19 +45,10 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEYTWO }}
-          script:  |
-              whoami
-              # ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
-              # cd into directory
-              cd ~/dev/mta
+          script: whoami
+ 
+ 
 
-              # Stop Container 
-              # docker compose down 
 
-              # Remove old container
-              # docker rm $(echo $IMAGE_NAME)
-
-              # Restart container
-              # docker compose up -d 
 
 
