@@ -46,16 +46,17 @@ jobs:
           known_hosts: ${{ secrets.HOST}}
       - name: Restart container
         run:  |
+            ssh $(echo USERNAME):$(echo HOST)
             # cd into directory
-            cd ~/dev/mta
+            # cd ~/dev/mta
             
             # Stop Container 
-            docker compose down 
+            # docker compose down 
             
             # Remove old container
-            docker rm $(echo $IMAGE_NAME)
+            # docker rm $(echo $IMAGE_NAME)
             
             # Restart container
-            docker compose up -d 
+            # docker compose up -d 
             
 
