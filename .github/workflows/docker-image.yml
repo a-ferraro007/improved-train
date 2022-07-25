@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEY }}
           script:  |
-              ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
+              # ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
               # cd into directory
               cd ~/dev/mta
 
