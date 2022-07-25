@@ -44,7 +44,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
+          key: ${{ secrets.SSHKEYTWO }}
           script:  |
               whoami
               # ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
