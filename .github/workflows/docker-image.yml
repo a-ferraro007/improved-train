@@ -40,23 +40,22 @@ jobs:
     
     steps:
       - name: Deploy to Digital Ocean droplet via SSH action
-        uses: shimataro/ssh-key-action@v2
+        uses: appleboy/ssh-action@master
         with:
-          key: ${{ secrets.SSHKEY }}
-          known_hosts: ${{ secrets.HOST}}
-      - name: Restart container
-        run:  |
-            ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
-            # cd into directory
-            cd ~/dev/mta
-            
-            # Stop Container 
-            # docker compose down 
-            
-            # Remove old container
-            # docker rm $(echo $IMAGE_NAME)
-            
-            # Restart container
-            # docker compose up -d 
-            
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          script:  |
+              ssh -tt ${{ secrets.USERNAME }}@${{ secrets.HOST }}
+              # cd into directory
+              cd ~/dev/mta
+
+              # Stop Container 
+              # docker compose down 
+
+              # Remove old container
+              # docker rm $(echo $IMAGE_NAME)
+
+              # Restart container
+              # docker compose up -d 
+
 
