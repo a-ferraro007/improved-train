@@ -44,8 +44,8 @@ jobs:
         with:
           key: ${{ secrets.SSHKEY }}
           known_hosts: ${{ secrets.HOST}}
-          envs: IMAGE_NAME,REGISTRY,{{ secrets.DIGITALOCEAN_ACCESS_TOKEN }},GITHUB_SHA
-          script: |
+      - name: Restart container
+        run:  |
             # cd into directory
             cd ~/dev/mta
             
