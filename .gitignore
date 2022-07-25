@@ -4,3 +4,7 @@ apikey.go
 nginx/
 
 mta
+
+dhparam/
+mta-app.text
+nginx-proxy.text

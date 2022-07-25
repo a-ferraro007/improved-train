@@ -38,7 +38,7 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 	arrivingTrain := &ArrivingTrain{ClientID: client.UUID, SubwayLine: client.config.subwayLine}
 
 	if len(*cachedGTFSData) != 0 {
-		log.Printf("CACHE HIT: %v\n", client.UUID)
+		log.Printf("WRITE FROM CACHE: %v\n", client.UUID)
 		for _, tripUpdate := range *cachedGTFSData {
 			match, stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
 			if match {
@@ -49,11 +49,7 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		if len(stopTimeUpdateSlice) > 0 {
 			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
 			arrivingTrain.Trains = unparsed
-			if client.config.generator != nil {
-				arrivingTrain.ParsedTrains = client.config.generator(client.config.funct(parsed))
-			} else {
-				arrivingTrain.ParsedTrains = client.config.funct(parsed)
-			}
+			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
 
 		i := 0
@@ -62,14 +58,17 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 			i++
 		}
 	}
-	log.Println("FETCH")
+	log.Printf("START WRITING FOR CLIENT: %v \n", client.UUID)
 	for {
 		data, ok := <-client.send
 		if !ok {
 			client.conn.WriteMessage(websocket.CloseMessage, []byte{})
 			return
 		}
+		//not sure if rezeroing the slices is actually necessary
 		arrivingTrain.Trains = make([]*Train, 0)
+		arrivingTrain.ParsedTrains.Northbound = make([]*Train, 0)
+		arrivingTrain.ParsedTrains.SouthBound = make([]*Train, 0)
 		stopTimeUpdateSlice = make([]*StopTimeUpdate, 0)
 
 		for _, tripUpdate := range data {
@@ -82,11 +81,7 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		if len(stopTimeUpdateSlice) > 0 {
 			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
 			arrivingTrain.Trains = unparsed
-			if client.config.generator != nil {
-				arrivingTrain.ParsedTrains = client.config.generator(client.config.funct(parsed))
-			} else {
-				arrivingTrain.ParsedTrains = client.config.funct(parsed)
-			}
+			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
 
 		client.writeJSON(Message{Client: client, Message: *arrivingTrain})

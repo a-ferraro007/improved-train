@@ -19,6 +19,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
+	log.Println("MTA SERVER v.1 ")
 	Pools.Init()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

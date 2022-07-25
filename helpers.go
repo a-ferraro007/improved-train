@@ -12,17 +12,20 @@ import (
 
 func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Train, ParsedByDirection) {
 	unparsed := make([]*Train, 0)
-	parsed := ParsedByDirection{}
+	parsed := ParsedByDirection{Northbound: make([]*Train, 0), SouthBound: make([]*Train, 0)}
 	for _, trip := range stopTimeUpdateSlice {
 		train := &Train{}
 		train.Train = trip
 		train.Train.AddDelay()
-		train.Train.ConvertArrival()
+		train.Train.ConvertArrivalNoDelay()
+		train.Train.ConvertArrivalWithDelay()
 		train.Train.ConvertDeparture()
-		train.Train.ConvertTimeInMinutes()
+		train.Train.ConvertTimeToMinutesNoDelay()
+		train.Train.ConvertTimeToMinutesWithDelay()
+
 		if train.Train.TimeInMinutes < 0 {
-			log.Println("neg", train.Train)
-			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
+			//Sometimes time update data is stale so we skip any times that are in the past
+			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTimeNoDelay)
 			continue
 		}
 
@@ -46,6 +49,8 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 	return unparsed, parsed
 }
 
+//This should be Client Method since it's dependent on what the StopID the client is looking for
+//Then we could avoid the match = true BS.
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}
@@ -70,9 +75,10 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 }
 
 func defaultSort(parsed ParsedByDirection) ParsedByDirection {
-	log.Println("DEFAULT SORT", time.Now())
+	log.Println("DEFAULT SORT", len(parsed.Northbound))
+
 	sort.SliceStable(parsed.Northbound, func(i, j int) bool {
-		return parsed.Northbound[i].Train.TimeInMinutes < parsed.SouthBound[j].Train.TimeInMinutes
+		return parsed.Northbound[i].Train.TimeInMinutes < parsed.Northbound[j].Train.TimeInMinutes
 	})
 
 	sort.SliceStable(parsed.SouthBound, func(i, j int) bool {
