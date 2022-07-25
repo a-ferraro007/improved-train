@@ -46,9 +46,9 @@ jobs:
           known_hosts: ${{ secrets.HOST}}
       - name: Restart container
         run:  |
-            ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }}
+            ssh -t ${{ secrets.USERNAME }}@${{ secrets.HOST }}
             # cd into directory
-            # cd ~/dev/mta
+            cd ~/dev/mta
             
             # Stop Container 
             # docker compose down 
