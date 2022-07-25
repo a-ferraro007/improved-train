@@ -45,7 +45,16 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSHKEYTWO }}
-          script: whoami
+          script: |
+            # cd into directory
+              cd ~/dev/mta
+            # Stop Container 
+              docker compose down 
+            # Remove old container
+              docker rm $(echo $IMAGE_NAME)
+            # Restart container
+              docker compose up -d 
+
  
  
 
