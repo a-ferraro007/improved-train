@@ -46,7 +46,7 @@ jobs:
           known_hosts: ${{ secrets.HOST}}
       - name: Restart container
         run:  |
-            ssh $(echo USERNAME):$(echo HOST)
+            ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }}
             # cd into directory
             # cd ~/dev/mta
             
