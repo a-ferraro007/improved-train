@@ -81,7 +81,7 @@ func (s *StopTimeUpdate) ConvertArrivalNoDelay() {
 	s.ConvertedArrivalTimeNoDelay = time.Unix(int64(*s.ArrivalTime), 0)
 }
 
-func (s *StopTimeUpdate) ConvertTimeToMinutesDelay() {
+func (s *StopTimeUpdate) ConvertTimeToMinutesWithDelay() {
 	s.TimeInMinutes = math.Floor(time.Until(s.ConvertedArrivalTimeWithDelay).Minutes()) + 1
 }
 
@@ -93,7 +93,7 @@ func (s *StopTimeUpdate) ConvertDeparture() {
 	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
 }
 
-func (s *StopTimeUpdate) ConvertTimeToMinutesWithNoDelay() {
+func (s *StopTimeUpdate) ConvertTimeToMinutesNoDelay() {
 	s.TimeInMinutesNoDelay = math.Floor(time.Until(s.ConvertedArrivalTimeNoDelay).Minutes()) + 1
 }
 
