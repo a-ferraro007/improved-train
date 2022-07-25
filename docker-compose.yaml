@@ -2,9 +2,10 @@ version: '2'
 services:
   goservice:
     restart: always
-    build:
-      dockerfile: Dockerfile
-      context: .
+    #build:
+    #  dockerfile: Dockerfile
+    #  context: .
+    image: registry.digitalocean.com/mta-times/mta_goservice:latest
     ports:
       - '8080:8080'
     networks:
