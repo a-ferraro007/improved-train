@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"sync"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -29,12 +30,29 @@ type Client struct {
 	send       chan []*gtfs.TripUpdate_StopTimeUpdate
 	stopId     string
 	subwayLine string
+	config     Config
 	fetching   bool
-	//poolMap    PoolClient
+}
+
+type Config struct {
+	stopId     string
+	subwayLine string
+	sort       string
+	generate   string
+	funct      func(parsed ParsedByDirection) ParsedByDirection
+	generator  func(parsed ParsedByDirection) ParsedByDirection
+	//use this generator property to keep custom property generators
+	//seperate of the sorting function config property.
+}
+type SortPrototype func(parsed ParsedByDirection) ParsedByDirection
+
+type PoolMap struct {
+	Mutex sync.RWMutex
+	Map   map[string]*Pool
 }
 
 type Message struct {
-	Message ArrivingTrain //[string]interface{}
+	Message ArrivingTrain
 	Client  *Client
 }
 
@@ -43,42 +61,65 @@ type RespMsg struct {
 }
 
 type StopTimeUpdate struct {
-	Id                     string                         `json:"id"`
-	ArrivalTime            *int64                         `json:"arrivalTime"`
-	DepartureTime          *int64                         `json:"departureTime"`
-	Delay                  int32                          `json:"delay"`
-	ArrivalTimeWithDelay   int64                          `json:"arrivalTimeDelay"`
-	ConvertedArrivalTime   time.Time                      `json:"convertedArrivalTime"`
-	ConvertedDepartureTime time.Time                      `json:"convertedDepartureTime"`
-	TimeInMinutes          float64                        `json:"timeInMinutes"`
-	GtfsDeparture          *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
+	Trip                          *gtfs.TripDescriptor           `json:"trip"`
+	Id                            string                         `json:"id"`
+	ArrivalTime                   *int64                         `json:"arrivalTime"`
+	DepartureTime                 *int64                         `json:"departureTime"`
+	Delay                         int32                          `json:"delay"`
+	ArrivalTimeWithDelay          int64                          `json:"arrivalTimeDelay"`
+	ConvertedArrivalTimeWithDelay time.Time                      `json:"convertedArrivalTimeWithDelay "`
+	ConvertedArrivalTimeNoDelay   time.Time                      `json:"convertedArrivalTimeNoDelay"`
+	ConvertedDepartureTime        time.Time                      `json:"convertedDepartureTime"`
+	TimeInMinutes                 float64                        `json:"timeInMinutes"`
+	TimeInMinutesWithDelay        float64                        `json:"timeInMinutesWithDelay"`
+	GtfsDeparture                 *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
 }
 
-func (s *StopTimeUpdate) ConvertArrival() {
-	s.ConvertedArrivalTime = time.Unix(int64(s.ArrivalTimeWithDelay), 0)
+//Still unsure about how all these time/delay conversions
+//should be handled. Merge all of these into 1 conversion function
+func (s *StopTimeUpdate) ConvertArrivalNoDelay() {
+	s.ConvertedArrivalTimeNoDelay = time.Unix(int64(*s.ArrivalTime), 0)
+}
+
+func (s *StopTimeUpdate) ConvertTimeToMinutesNoDelay() {
+	s.TimeInMinutes = math.Floor(time.Until(s.ConvertedArrivalTimeNoDelay).Minutes()) + 1
+}
+
+func (s *StopTimeUpdate) ConvertArrivalWithDelay() {
+	s.ConvertedArrivalTimeWithDelay = time.Unix((s.ArrivalTimeWithDelay), 0)
 }
 
 func (s *StopTimeUpdate) ConvertDeparture() {
-	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(*s.GtfsDeparture.Delay)), 0)
+	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
 }
 
 func (s *StopTimeUpdate) AddDelay() {
 	s.ArrivalTimeWithDelay = *s.ArrivalTime + int64(s.Delay)
 }
 
-func (s *StopTimeUpdate) ConvertTimeInMinutes() {
-	s.TimeInMinutes = math.Round(time.Until(s.ConvertedArrivalTime).Minutes())
+func (s *StopTimeUpdate) ConvertTimeToMinutesWithDelay() {
+	s.TimeInMinutesWithDelay = math.Floor(time.Until(s.ConvertedArrivalTimeWithDelay).Minutes()) + 1
 }
 
 type ArrivingTrain struct {
-	ClientID   uuid.UUID `json:"clientId"`
-	SubwayLine string    `json:"subwayLine"`
-	Trains     []*Train  `json:"trains"`
+	ClientID     uuid.UUID         `json:"clientId"`
+	SubwayLine   string            `json:"subwayLine"`
+	Trains       []*Train          `json:"trains"` //Return all trains to do whatever clientside
+	ParsedTrains ParsedByDirection `json:"parsedTrains"`
 }
 
 type Train struct {
-	Direction string          `json:"direction"`
-	Train     *StopTimeUpdate `json:"train"`
+	DirectionV2 string          `json:"directionV2"`
+	Direction   string          `json:"direction"`
+	Train       *StopTimeUpdate `json:"train"`
+}
+
+type ParsedByDirection struct {
+	Northbound []*Train `json:"northbound"` //sorted by the default sorting
+	SouthBound []*Train `json:"southbound"` //sorted by the default sorting
+	//Add ability to attach a custom data type here so I can
+	//use the config struct to write functions that can combine
+	//different data feeds into a single return object.
 }
 
 type ServiceAlertHeader struct{}

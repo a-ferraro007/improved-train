@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -18,6 +19,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
+	log.Println("MTA SERVER v.1 ")
 	Pools.Init()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -39,18 +41,17 @@ func main() {
 	})
 
 	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
-		//log.Println("TRASNIT DATE")
-		//(w).Header().Set("Access-Control-Allow-Origin", "*")
-		//if r.Method == http.MethodOptions{
-		//	log.Println("PREFLIGHT", r)
-		//} else {
-		//	log.Println(r.Method)
-		//}
-		//data := transitTimes("L", "L12", uuid.New())
-		//log.Printf("%+v",data)
-		//json, _ := json.Marshal(data)
-		//w.Header().Set("Content-Type", "application/json")
-		//w.Write(json)
+		log.Println("TRASNIT DATE")
+		(w).Header().Set("Access-Control-Allow-Origin", "*")
+		if r.Method == http.MethodOptions {
+			log.Println("PREFLIGHT", r)
+		} else {
+			log.Println(r.Method)
+		}
+		data := transitTimes("L")
+		json, _ := json.Marshal(data)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(json)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

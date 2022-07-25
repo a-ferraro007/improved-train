@@ -2,20 +2,14 @@ package main
 
 import (
 	"log"
-	"sync"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-type PoolMap struct {
-	Mutex sync.RWMutex
-	Map   map[string]*Pool
-}
-
 func (p *PoolMap) Init() {
-	log.Println("INIT POOL MAP")
+	log.Println("INITIALIZE POOL MAP")
 	p.Map = make(map[string]*Pool)
 }
 
@@ -45,19 +39,23 @@ func (p *PoolMap) insertIntoPool(subwayLine string, stopId string, conn *websock
 		send:       make(chan []*gtfs.TripUpdate_StopTimeUpdate),
 		stopId:     stopId,
 		subwayLine: subwayLine,
+		config:     Config{stopId: stopId, subwayLine: subwayLine, sort: "ascending"},
 		fetching:   false,
 	}
+	client.configureSort()
+	client.configureGenerator()
 
 	mV2 := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
-	mV2 = pool.cachedStopTimeUpdate[client.subwayLine]
+	mV2 = pool.cachedStopTimeUpdate[client.config.subwayLine]
 	pool.register <- client
 	go client.read()
-	go client.writeV2(&mV2)
+	go client.write(&mV2)
 }
 
 func (p *PoolMap) deletePool(subwayLine string) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
+
 	p.Map[subwayLine].done <- true
 	delete(p.Map, subwayLine)
 	log.Println("POOL MAP: ", p.Map)

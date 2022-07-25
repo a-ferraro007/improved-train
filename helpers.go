@@ -3,46 +3,54 @@ package main
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
 
-func returnTrainSlice(stopTimeUpdateSlice []*StopTimeUpdate) []*Train {
-	trainSlice := make([]*Train, 0)
-
+func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Train, ParsedByDirection) {
+	unparsed := make([]*Train, 0)
+	parsed := ParsedByDirection{Northbound: make([]*Train, 0), SouthBound: make([]*Train, 0)}
 	for _, trip := range stopTimeUpdateSlice {
-		var train = &Train{}
+		train := &Train{}
+		train.Train = trip
+		train.Train.AddDelay()
+		train.Train.ConvertArrivalNoDelay()
+		train.Train.ConvertArrivalWithDelay()
+		train.Train.ConvertDeparture()
+		train.Train.ConvertTimeToMinutesNoDelay()
+		train.Train.ConvertTimeToMinutesWithDelay()
+
+		if train.Train.TimeInMinutes < 0 {
+			//Sometimes time update data is stale so we skip any times that are in the past
+			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTimeNoDelay)
+			continue
+		}
+
+		idSplit := strings.Split(trip.Id, "")
+		direction := strings.ToLower(idSplit[len(idSplit)-1])
 
 		//Create helper for this to parse Northbound & Southbound trains
-		if strings.Count(trip.Id, "N") >= 1 && strings.Count(trip.Id, "N") <= 2 {
-			train.Train = trip
+		if direction == "n" {
 			train.Direction = "Manhattan"
-			train.Train.AddDelay()
-			train.Train.ConvertArrival()
-			train.Train.ConvertDeparture()
-			train.Train.ConvertTimeInMinutes()
-		}
-
-		if strings.Count(trip.Id, "S") >= 1 && strings.Count(trip.Id, "S") <= 2 {
-			train.Train = trip
+			train.DirectionV2 = "N" //Use an Enum for this?
+			parsed.Northbound = append(parsed.Northbound, train)
+		} else if direction == "s" {
 			train.Direction = "Brooklyn"
-			train.Train.AddDelay()
-			train.Train.ConvertArrival()
-			train.Train.ConvertDeparture()
-			train.Train.ConvertTimeInMinutes()
+			train.DirectionV2 = "S" //Use an Enum for this?
+			parsed.SouthBound = append(parsed.SouthBound, train)
 		}
 
-		if train.Train.TimeInMinutes >= 0 {
-			trainSlice = append(trainSlice, train)
-		} else {
-			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTime)
-		}
+		unparsed = append(unparsed, train)
 	}
-	//log.Printf("TRAIN SLICE: %v\n", trainSlice)
-	return trainSlice
+
+	return unparsed, parsed
 }
 
+//This should be Client Method since it's dependent on what the StopID the client is looking for
+//Then we could avoid the match = true BS.
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}
@@ -64,4 +72,27 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 	}
 
 	return match, &stopTimeUpdate
+}
+
+func defaultSort(parsed ParsedByDirection) ParsedByDirection {
+	log.Println("DEFAULT SORT", len(parsed.Northbound))
+
+	sort.SliceStable(parsed.Northbound, func(i, j int) bool {
+		return parsed.Northbound[i].Train.TimeInMinutes < parsed.Northbound[j].Train.TimeInMinutes
+	})
+
+	sort.SliceStable(parsed.SouthBound, func(i, j int) bool {
+		return parsed.SouthBound[i].Train.TimeInMinutes < parsed.SouthBound[j].Train.TimeInMinutes
+	})
+
+	return parsed
+}
+
+func descendingSort(parsed ParsedByDirection) ParsedByDirection {
+	log.Println("DESCENDING SORT", time.Now())
+	return parsed
+}
+
+func testGen(parsed ParsedByDirection) ParsedByDirection {
+	return parsed
 }

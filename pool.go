@@ -30,18 +30,12 @@ func (p *Pool) run() {
 		case client := <-p.register:
 			p.clients[client.UUID] = client
 			log.Println("Register", len(p.clients))
-			if len(p.activeTrains[client.subwayLine]) > 1 {
-				log.Println("IMMEDIATELY RETURN CACHED GTFS DATA")
-				client.send <- p.cachedStopTimeUpdate[client.subwayLine]
-			}
 		case client := <-p.unregister:
 			if _, ok := p.clients[client.UUID]; ok {
 				for _, c := range p.clients {
-					//log.Printf("------ LOOP %v ------\n", c[client.UUID])
-					line := client.subwayLine
+					line := client.config.subwayLine
 					if client.UUID == c.UUID {
 						log.Printf("___________ REMOVING CLIENT:   %v ___________\n", client.UUID)
-
 						delete(p.clients, client.UUID)
 						close(client.send)
 
@@ -54,7 +48,6 @@ func (p *Pool) run() {
 			}
 		//change name
 		case broadcast := <-p.broadcast:
-			//log.Println(broadcast)
 			p.cachedStopTimeUpdate[p.subwayLine] = broadcast
 			for _, client := range p.clients {
 				log.Println("CLIENT SEND V2: ", client.UUID)
