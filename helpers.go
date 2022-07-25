@@ -19,9 +19,9 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 		train.Train.AddDelay()
 		train.Train.ConvertArrivalNoDelay()
 		train.Train.ConvertArrivalWithDelay()
-		train.Train.ConvertDeparture()
 		train.Train.ConvertTimeToMinutesNoDelay()
 		train.Train.ConvertTimeToMinutesWithDelay()
+		train.Train.ConvertDeparture()
 
 		if train.Train.TimeInMinutes < 0 {
 			//Sometimes time update data is stale so we skip any times that are in the past
@@ -51,6 +51,7 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 
 //This should be Client Method since it's dependent on what the StopID the client is looking for
 //Then we could avoid the match = true BS.
+//Need to clean up the if/else statement
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}
@@ -62,7 +63,7 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 			stopTimeUpdate.Id = update.GetStopId()
 			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
 			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-			stopTimeUpdate.Delay = update.GetDeparture().GetDelay()
+			stopTimeUpdate.Delay = *update.GetArrival().Delay
 			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
 		} else {
 			fmt.Println("NO DEPARTURE")

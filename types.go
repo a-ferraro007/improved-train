@@ -71,7 +71,7 @@ type StopTimeUpdate struct {
 	ConvertedArrivalTimeNoDelay   time.Time                      `json:"convertedArrivalTimeNoDelay"`
 	ConvertedDepartureTime        time.Time                      `json:"convertedDepartureTime"`
 	TimeInMinutes                 float64                        `json:"timeInMinutes"`
-	TimeInMinutesWithDelay        float64                        `json:"timeInMinutesWithDelay"`
+	TimeInMinutesNoDelay          float64                        `json:"timeInMinutesNoDelay"`
 	GtfsDeparture                 *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
 }
 
@@ -81,8 +81,8 @@ func (s *StopTimeUpdate) ConvertArrivalNoDelay() {
 	s.ConvertedArrivalTimeNoDelay = time.Unix(int64(*s.ArrivalTime), 0)
 }
 
-func (s *StopTimeUpdate) ConvertTimeToMinutesNoDelay() {
-	s.TimeInMinutes = math.Floor(time.Until(s.ConvertedArrivalTimeNoDelay).Minutes()) + 1
+func (s *StopTimeUpdate) ConvertTimeToMinutesDelay() {
+	s.TimeInMinutes = math.Floor(time.Until(s.ConvertedArrivalTimeWithDelay).Minutes()) + 1
 }
 
 func (s *StopTimeUpdate) ConvertArrivalWithDelay() {
@@ -93,12 +93,12 @@ func (s *StopTimeUpdate) ConvertDeparture() {
 	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
 }
 
-func (s *StopTimeUpdate) AddDelay() {
-	s.ArrivalTimeWithDelay = *s.ArrivalTime + int64(s.Delay)
+func (s *StopTimeUpdate) ConvertTimeToMinutesWithNoDelay() {
+	s.TimeInMinutesNoDelay = math.Floor(time.Until(s.ConvertedArrivalTimeNoDelay).Minutes()) + 1
 }
 
-func (s *StopTimeUpdate) ConvertTimeToMinutesWithDelay() {
-	s.TimeInMinutesWithDelay = math.Floor(time.Until(s.ConvertedArrivalTimeWithDelay).Minutes()) + 1
+func (s *StopTimeUpdate) AddDelay() {
+	s.ArrivalTimeWithDelay = *s.ArrivalTime + int64(s.Delay)
 }
 
 type ArrivingTrain struct {
