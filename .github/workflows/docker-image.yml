@@ -51,7 +51,7 @@ jobs:
             # Stop Container 
               docker compose down 
             # Remove old container
-              docker rm mta_goservice
+              docker image rm mta_goservice
             # Restart container
               docker compose up -d 
 
