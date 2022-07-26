@@ -27,8 +27,10 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 600
         
-      - name: Remove all old images
-        run: doctl registry repository delete-manifest -v mta_goservice && doctl registry repository dt -v mta_goservice latest
+#       - name: Remove old registry manifest
+#         run: doctl registry repository delete-manifest mta_goservice 
+#       - name: Remove old image
+#         run: doctl registry repository dt -v mta_goservice latest
         
       - name: Push image to DigitalOcean Container Registry
         run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):latest
