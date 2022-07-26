@@ -43,15 +43,41 @@ func main() {
 	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("TRASNIT DATE")
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		if r.Method == http.MethodOptions {
-			log.Println("PREFLIGHT", r)
-		} else {
-			log.Println(r.Method)
+
+		stopId := r.URL.Query()["stopId"][0]
+		subwayLine := r.URL.Query()["subwayLine"][0]
+		stopTimeUpdateSlice := make([]*StopTimeUpdate, 0)
+
+		data := handleFetchTransitData(subwayLine)
+		log.Println(len(data))
+		for _, tripUpdate := range data {
+			match, stopTimeUpdate := findStopData(tripUpdate, stopId)
+			if match {
+				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
+			}
 		}
-		data := transitTimes("L")
-		json, _ := json.Marshal(data)
+
+		log.Println(stopTimeUpdateSlice)
+		if len(stopTimeUpdateSlice) <= 0 {
+			log.Println("LESS")
+			json, _ := json.Marshal("empty")
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(json)
+		}
+
+		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+		trains := unparsed
+		parsedTrains := defaultSort(parsed)
+
+		m := Message{Message: ArrivingTrain{
+			Trains:       trains,
+			ParsedTrains: parsedTrains,
+		}}
+
+		json, _ := json.Marshal(m.Message)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)
+
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

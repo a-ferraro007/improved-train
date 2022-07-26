@@ -9,7 +9,7 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
-func transitTimes(subwayLine string) []*gtfs.TripUpdate_StopTimeUpdate {
+func handleFetchTransitData(subwayLine string) []*gtfs.TripUpdate_StopTimeUpdate {
 	client := &http.Client{}
 
 	alertReqURL := SUBWAY_LINE_REQUEST_URLS["SERVICE"]

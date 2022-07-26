@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"sort"
 	"strings"
@@ -55,20 +54,15 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}
-	//log.Printf("CLIENT STOP ID: %v\n UPDATE STOP ID: %v\n", stopID, update.GetStopId())
 	if strings.Contains(update.GetStopId(), stopID) {
 		match = true
 
-		if update.GetDeparture() != nil {
-			stopTimeUpdate.Id = update.GetStopId()
-			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
+		stopTimeUpdate.Id = update.GetStopId()
+		stopTimeUpdate.ArrivalTime = update.GetArrival().Time
+		stopTimeUpdate.DepartureTime = update.GetDeparture().Time
+		stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+		if update.Arrival.Delay != nil {
 			stopTimeUpdate.Delay = *update.GetArrival().Delay
-			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
-		} else {
-			fmt.Println("NO DEPARTURE")
-			stopTimeUpdate.Id = update.GetStopId()
-			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
 		}
 	}
 

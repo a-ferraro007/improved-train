@@ -65,7 +65,7 @@ func (pool *Pool) fetchData() {
 	//else the client doesn't receive the first for ~20 secs
 	i := 0
 	for i < 2 {
-		transitData := transitTimes(pool.subwayLine)
+		transitData := handleFetchTransitData(pool.subwayLine)
 		pool.broadcast <- transitData
 		i++
 	}
@@ -76,7 +76,7 @@ func (pool *Pool) fetchData() {
 			return
 		case time := <-pool.ticker.C:
 			log.Printf("TIME: %v\n", time)
-			transitData := transitTimes(pool.subwayLine)
+			transitData := handleFetchTransitData(pool.subwayLine)
 			pool.broadcast <- transitData
 		}
 	}

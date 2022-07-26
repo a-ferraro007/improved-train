@@ -52,7 +52,7 @@ type PoolMap struct {
 }
 
 type Message struct {
-	Message ArrivingTrain
+	Message ArrivingTrain //Confusing naming convention
 	Client  *Client
 }
 
