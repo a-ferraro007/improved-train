@@ -141,7 +141,7 @@ func containsAny(str string, substr string) bool {
 }
 
 func Process() SubwayStationMap {
-	f, err := os.Open("./fileprocessing/stations.csv")
+	f, err := os.Open("./stations.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
