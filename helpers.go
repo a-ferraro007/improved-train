@@ -48,9 +48,7 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 	return unparsed, parsed
 }
 
-//This should be Client Method since it's dependent on what the StopID the client is looking for
-//Then we could avoid the match = true BS.
-//Need to clean up the if/else statement
+//Get rid boolean return value
 func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := StopTimeUpdate{}

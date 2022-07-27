@@ -2,27 +2,52 @@ package fileprocessing
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type Station struct {
 	StationId      string `json:"stationId"`
 	ComplexId      string `json:"complexId"`
-	GtfsStopId     string `json:"gtfsStopId"`
+	stopId         string `json:"stopId"`
 	SubwayLine     string `json:"subwayLine"`
 	StopName       string `json:"stopName"`
 	Borough        string `json:"borough"`
+	Routes         string `json:"routes"`
 	Lattitude      string `json:"lattitude"`
 	Longitude      string `json:"longitude"`
 	NorthDirection string `json:"northDirectionLabel"`
 	SouthDirection string `json:"southDirectionLabel"`
 }
 
-func createStationObject(data [][]string) []Station {
-	stationList := make([]Station, 0)
+type SubwayStationMap struct {
+	L       []Station
+	ACE     []Station
+	BDFM    []Station
+	G       []Station
+	JZ      []Station
+	NQRW    []Station
+	NUMBERS []Station
+	SHUTTLE []Station
+	SERVICE []Station
+}
 
+// subway line needs to map to SUBWAY_LINE_REQUEST_URLS constant since this
+//is how the pools are segmented.
+//var SUBWAY_LINE_REQUEST_URLS = map[string]string {
+//	"L": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l",
+//	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
+//	"BDFM": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
+//	"G": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g",
+//	"JZ": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
+//	"NQRW": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
+//	"NUMBERS": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
+//	"SERVICE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json",
+//}
+
+func createSliceOfStations(data [][]string) []Station {
+	stationList := make([]Station, 0)
 	for i, line := range data {
 		if i > 0 {
 			station := Station{}
@@ -33,13 +58,15 @@ func createStationObject(data [][]string) []Station {
 				case j == 1:
 					station.ComplexId = field
 				case j == 2:
-					station.GtfsStopId = field
+					station.stopId = field
 				case j == 4:
 					station.SubwayLine = field
 				case j == 5:
 					station.StopName = field
 				case j == 6:
 					station.Borough = field
+				case j == 7:
+					station.Routes = field
 				case j == 9:
 					station.Lattitude = field
 				case j == 10:
@@ -56,7 +83,65 @@ func createStationObject(data [][]string) []Station {
 	return stationList
 }
 
-func Process() []Station {
+func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
+	stationMap := SubwayStationMap{
+		L:       make([]Station, 0),
+		ACE:     make([]Station, 0),
+		BDFM:    make([]Station, 0),
+		G:       make([]Station, 0),
+		JZ:      make([]Station, 0),
+		NQRW:    make([]Station, 0),
+		NUMBERS: make([]Station, 0),
+		SHUTTLE: make([]Station, 0),
+		SERVICE: make([]Station, 0),
+	}
+
+	leftover := make([]Station, 0)
+	for _, station := range stations {
+		routes := station.Routes
+		trim := strings.ToUpper(strings.ReplaceAll(routes, " ", ""))
+
+		//not sure what subway line this is right now
+		if trim == "SIR" {
+			leftover = append(leftover, station)
+			continue
+		}
+
+		if strings.Contains("L", trim) {
+			stationMap.L = append(stationMap.L, station)
+		} else if strings.Contains("G", trim) {
+			stationMap.G = append(stationMap.G, station)
+		} else if strings.Contains("S", trim) {
+			stationMap.SHUTTLE = append(stationMap.SHUTTLE, station)
+		} else if containsAny("ACE", trim) {
+			stationMap.ACE = append(stationMap.ACE, station)
+		} else if containsAny("BDFM", trim) {
+			stationMap.BDFM = append(stationMap.BDFM, station)
+		} else if containsAny("JZ", trim) {
+			stationMap.JZ = append(stationMap.JZ, station)
+		} else if containsAny("NQRW", trim) {
+			stationMap.NQRW = append(stationMap.NQRW, station)
+		} else if containsAny("1234567", trim) {
+			stationMap.NUMBERS = append(stationMap.NUMBERS, station)
+		}
+	}
+
+	return stationMap
+	//for _, s := range stationMap.L {
+	//	log.Println(s.stopId, len(stationMap.L))
+	//}
+}
+
+func containsAny(str string, substr string) bool {
+	for _, l := range str {
+		if strings.Contains(substr, string(l)) {
+			return true
+		}
+	}
+	return false
+}
+
+func Process() SubwayStationMap {
 	f, err := os.Open("./fileprocessing/stations.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -69,8 +154,6 @@ func Process() []Station {
 		log.Fatal(err)
 	}
 
-	stations := createStationObject(data)
-
-	// print the array
-	fmt.Printf("%+v\n", stations)
+	stations := createSliceOfStations(data)
+	return createStationToSubwayLineMap(stations)
 }

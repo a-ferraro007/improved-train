@@ -20,9 +20,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	log.Println("MTA SERVER v0.1.2 ")
+	log.Println("MTA SERVER v0.1.4")
 	Pools.Init()
-	fileprocessing.Process()
+	stations := fileprocessing.Process() //process once when the server starts up
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -82,8 +82,12 @@ func main() {
 
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(w, "Hello, i'm a golang microservice")
+		(w).Header().Set("Access-Control-Allow-Origin", "*")
+		json, _ := json.Marshal(stations)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(json)
 	})
 
 	log.Println("Server Running On Port :8080")
