@@ -17,6 +17,7 @@ RUN go mod download
 
 #Copy source into Docker Image
 COPY *.go ./
+COPY stations.csv ./
 
 RUN go build -o /mta
 
