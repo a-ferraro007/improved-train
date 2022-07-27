@@ -7,10 +7,25 @@ import (
 	"strings"
 )
 
+/*
+subway line needs to map to SUBWAY_LINE_REQUEST_URLS constant since this
+is how the pools are segmented.
+var SUBWAY_LINE_REQUEST_URLS = map[string]string {
+ "L": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l",
+ "ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
+ "BDFM": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
+ "G": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g",
+ "JZ": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
+ "NQRW": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
+ "NUMBERS": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
+ "SERVICE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json",
+}
+*/
+
 type Station struct {
 	StationId      string `json:"stationId"`
 	ComplexId      string `json:"complexId"`
-	stopId         string `json:"stopId"`
+	StopId         string `json:"stopId"`
 	SubwayLine     string `json:"subwayLine"`
 	StopName       string `json:"stopName"`
 	Borough        string `json:"borough"`
@@ -33,19 +48,6 @@ type SubwayStationMap struct {
 	SERVICE []Station
 }
 
-// subway line needs to map to SUBWAY_LINE_REQUEST_URLS constant since this
-//is how the pools are segmented.
-//var SUBWAY_LINE_REQUEST_URLS = map[string]string {
-//	"L": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l",
-//	"ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
-//	"BDFM": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
-//	"G": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g",
-//	"JZ": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
-//	"NQRW": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
-//	"NUMBERS": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
-//	"SERVICE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json",
-//}
-
 func createSliceOfStations(data [][]string) []Station {
 	stationList := make([]Station, 0)
 	for i, line := range data {
@@ -58,7 +60,7 @@ func createSliceOfStations(data [][]string) []Station {
 				case j == 1:
 					station.ComplexId = field
 				case j == 2:
-					station.stopId = field
+					station.StopId = field
 				case j == 4:
 					station.SubwayLine = field
 				case j == 5:
@@ -128,7 +130,7 @@ func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
 
 	return stationMap
 	//for _, s := range stationMap.L {
-	//	log.Println(s.stopId, len(stationMap.L))
+	//	log.Println(s.StopId, len(stationMap.L))
 	//}
 }
 
