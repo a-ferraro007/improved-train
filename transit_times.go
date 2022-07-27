@@ -24,7 +24,7 @@ func handleFetchTransitData(subwayLine string) []*gtfs.TripUpdate_StopTimeUpdate
 
 	reqURL := SUBWAY_LINE_REQUEST_URLS[subwayLine]
 	req2, err2 := http.NewRequest("GET", reqURL, nil)
-
+	log.Println(reqURL)
 	req2.Header.Set("x-api-key", MTA_API_KEY)
 	if err2 != nil {
 		log.Println("LINE 113")
