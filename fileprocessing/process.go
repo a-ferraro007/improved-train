@@ -129,9 +129,6 @@ func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
 	}
 
 	return stationMap
-	//for _, s := range stationMap.L {
-	//	log.Println(s.StopId, len(stationMap.L))
-	//}
 }
 
 func containsAny(str string, substr string) bool {
