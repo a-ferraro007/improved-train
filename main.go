@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/mta/fileprocessing"
 )
 
 var Pools PoolMap
@@ -22,7 +21,7 @@ var upgrader = websocket.Upgrader{
 func main() {
 	log.Println("MTA SERVER v0.1.4")
 	Pools.Init()
-	stations := fileprocessing.Process() //process once when the server starts up
+	stations := Process() //process once when the server starts up
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
