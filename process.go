@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-/*
+/********************
+MOVE ALL OF THIS INTO A CLOUDFLARE WORKER?
+
+
 subway line needs to map to SUBWAY_LINE_REQUEST_URLS constant since this
 is how the pools are segmented.
 var SUBWAY_LINE_REQUEST_URLS = map[string]string {
@@ -20,7 +23,7 @@ var SUBWAY_LINE_REQUEST_URLS = map[string]string {
  "NUMBERS": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
  "SERVICE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json",
 }
-*/
+********************/
 
 type Station struct {
 	StationId      string `json:"stationId"`
@@ -37,15 +40,24 @@ type Station struct {
 }
 
 type SubwayStationMap struct {
-	L       []Station
-	ACE     []Station
-	BDFM    []Station
-	G       []Station
-	JZ      []Station
-	NQRW    []Station
-	NUMBERS []Station
-	SHUTTLE []Station
-	SERVICE []Station
+	NUMBERS ParsedStationMap
+	ACE     ParsedStationMap
+	BDFM    ParsedStationMap
+	NQRW    ParsedStationMap
+	L       ParsedStationMap
+	G       ParsedStationMap
+	S       ParsedStationMap
+	JZ      ParsedStationMap
+	SERVICE ParsedStationMap
+}
+
+type ParsedStationMap struct {
+	Stations          []Station            `json:"stations"`
+	StationsByBorough map[string][]Station `json:"stationsByBorough"`
+}
+
+type StaticData struct {
+	Map SubwayStationMap `json:"map"`
 }
 
 func createSliceOfStations(data [][]string) []Station {
@@ -87,15 +99,15 @@ func createSliceOfStations(data [][]string) []Station {
 
 func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
 	stationMap := SubwayStationMap{
-		L:       make([]Station, 0),
-		ACE:     make([]Station, 0),
-		BDFM:    make([]Station, 0),
-		G:       make([]Station, 0),
-		JZ:      make([]Station, 0),
-		NQRW:    make([]Station, 0),
-		NUMBERS: make([]Station, 0),
-		SHUTTLE: make([]Station, 0),
-		SERVICE: make([]Station, 0),
+		NUMBERS: ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		ACE:     ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		BDFM:    ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		NQRW:    ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		L:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		G:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		SERVICE: ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		JZ:      ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		S:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
 	}
 
 	leftover := make([]Station, 0)
@@ -110,21 +122,38 @@ func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
 		}
 
 		if strings.Contains("L", trim) {
-			stationMap.L = append(stationMap.L, station)
+			stationMap.L.Stations = append(stationMap.L.Stations, station)
+			stationMap.L.StationsByBorough[station.Borough] = append(stationMap.L.StationsByBorough[station.Borough], station)
+			//stationMap.L = append(stationMap.L, station)
+			//stationMap.L[station.borough] = append()
 		} else if strings.Contains("G", trim) {
-			stationMap.G = append(stationMap.G, station)
+			//stationMap.G = append(stationMap.G, station)
+			stationMap.G.Stations = append(stationMap.G.Stations, station)
+			stationMap.G.StationsByBorough[station.Borough] = append(stationMap.G.StationsByBorough[station.Borough], station)
 		} else if strings.Contains("S", trim) {
-			stationMap.SHUTTLE = append(stationMap.SHUTTLE, station)
+			//stationMap.S = append(stationMap.S, station)
+			stationMap.S.Stations = append(stationMap.S.Stations, station)
+			stationMap.S.StationsByBorough[station.Borough] = append(stationMap.S.StationsByBorough[station.Borough], station)
 		} else if containsAny("ACE", trim) {
-			stationMap.ACE = append(stationMap.ACE, station)
+			//stationMap.ACE = append(stationMap.ACE, station)
+			stationMap.ACE.Stations = append(stationMap.ACE.Stations, station)
+			stationMap.ACE.StationsByBorough[station.Borough] = append(stationMap.ACE.StationsByBorough[station.Borough], station)
 		} else if containsAny("BDFM", trim) {
-			stationMap.BDFM = append(stationMap.BDFM, station)
+			//stationMap.BDFM = append(stationMap.BDFM, station)
+			stationMap.BDFM.Stations = append(stationMap.BDFM.Stations, station)
+			stationMap.BDFM.StationsByBorough[station.Borough] = append(stationMap.BDFM.StationsByBorough[station.Borough], station)
 		} else if containsAny("JZ", trim) {
-			stationMap.JZ = append(stationMap.JZ, station)
+			//stationMap.JZ = append(stationMap.JZ, station)
+			stationMap.JZ.Stations = append(stationMap.JZ.Stations, station)
+			stationMap.JZ.StationsByBorough[station.Borough] = append(stationMap.JZ.StationsByBorough[station.Borough], station)
 		} else if containsAny("NQRW", trim) {
-			stationMap.NQRW = append(stationMap.NQRW, station)
+			//stationMap.NQRW = append(stationMap.NQRW, station)
+			stationMap.NQRW.Stations = append(stationMap.NQRW.Stations, station)
+			stationMap.NQRW.StationsByBorough[station.Borough] = append(stationMap.NQRW.StationsByBorough[station.Borough], station)
 		} else if containsAny("1234567", trim) {
-			stationMap.NUMBERS = append(stationMap.NUMBERS, station)
+			//stationMap.NUMBERS = append(stationMap.NUMBERS, station)
+			stationMap.NUMBERS.Stations = append(stationMap.NUMBERS.Stations, station)
+			stationMap.NUMBERS.StationsByBorough[station.Borough] = append(stationMap.NUMBERS.StationsByBorough[station.Borough], station)
 		}
 	}
 
@@ -140,7 +169,7 @@ func containsAny(str string, substr string) bool {
 	return false
 }
 
-func Process() SubwayStationMap {
+func Process() StaticData {
 	f, err := os.Open("./stations.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -154,5 +183,9 @@ func Process() SubwayStationMap {
 	}
 
 	stations := createSliceOfStations(data)
-	return createStationToSubwayLineMap(stations)
+	stationMap := createStationToSubwayLineMap(stations)
+
+	return StaticData{
+		Map: stationMap,
+	}
 }
