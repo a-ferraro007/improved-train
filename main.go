@@ -21,7 +21,7 @@ var upgrader = websocket.Upgrader{
 func main() {
 	log.Println("MTA SERVER v0.1.4")
 	Pools.Init()
-	stations := Process() //process once when the server starts up
+	staticData := Process() //process once when the server starts up
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -81,10 +81,9 @@ func main() {
 
 	})
 
-	http.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(w, "Hello, i'm a golang microservice")
+	http.HandleFunc("/static", func(w http.ResponseWriter, r *http.Request) {
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		json, _ := json.Marshal(stations)
+		json, _ := json.Marshal(staticData)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)
 	})
