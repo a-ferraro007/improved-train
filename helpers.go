@@ -20,7 +20,7 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 		train.Train.ConvertArrivalWithDelay()
 		train.Train.ConvertTimeToMinutesNoDelay()
 		train.Train.ConvertTimeToMinutesWithDelay()
-		train.Train.ConvertDeparture()
+		//train.Train.ConvertDeparture()
 
 		if train.Train.TimeInMinutes < 0 {
 			//Sometimes time update data is stale so we skip any times that are in the past
@@ -57,8 +57,8 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 
 		stopTimeUpdate.Id = update.GetStopId()
 		stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-		stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-		stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+		//stopTimeUpdate.DepartureTime = update.GetDeparture().Time
+		//stopTimeUpdate.GtfsDeparture = update.GetDeparture()
 		if update.Arrival.Delay != nil {
 			stopTimeUpdate.Delay = *update.GetArrival().Delay
 		}

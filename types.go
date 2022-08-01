@@ -61,18 +61,18 @@ type RespMsg struct {
 }
 
 type StopTimeUpdate struct {
-	Trip                          *gtfs.TripDescriptor           `json:"trip"`
-	Id                            string                         `json:"id"`
-	ArrivalTime                   *int64                         `json:"arrivalTime"`
-	DepartureTime                 *int64                         `json:"departureTime"`
-	Delay                         int32                          `json:"delay"`
-	ArrivalTimeWithDelay          int64                          `json:"arrivalTimeDelay"`
-	ConvertedArrivalTimeWithDelay time.Time                      `json:"convertedArrivalTimeWithDelay "`
-	ConvertedArrivalTimeNoDelay   time.Time                      `json:"convertedArrivalTimeNoDelay"`
-	ConvertedDepartureTime        time.Time                      `json:"convertedDepartureTime"`
-	TimeInMinutes                 float64                        `json:"timeInMinutes"`
-	TimeInMinutesNoDelay          float64                        `json:"timeInMinutesNoDelay"`
-	GtfsDeparture                 *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
+	Trip                          *gtfs.TripDescriptor `json:"trip"`
+	Id                            string               `json:"id"`
+	ArrivalTime                   *int64               `json:"arrivalTime"`
+	DepartureTime                 *int64               `json:"departureTime"`
+	Delay                         int32                `json:"delay"`
+	ArrivalTimeWithDelay          int64                `json:"arrivalTimeDelay"`
+	ConvertedArrivalTimeWithDelay time.Time            `json:"convertedArrivalTimeWithDelay "`
+	ConvertedArrivalTimeNoDelay   time.Time            `json:"convertedArrivalTimeNoDelay"`
+	//ConvertedDepartureTime        time.Time                      `json:"convertedDepartureTime"`
+	TimeInMinutes        float64                        `json:"timeInMinutes"`
+	TimeInMinutesNoDelay float64                        `json:"timeInMinutesNoDelay"`
+	GtfsDeparture        *gtfs.TripUpdate_StopTimeEvent `json:"departure"`
 }
 
 //Still unsure about how all these time/delay conversions
@@ -89,9 +89,9 @@ func (s *StopTimeUpdate) ConvertArrivalWithDelay() {
 	s.ConvertedArrivalTimeWithDelay = time.Unix((s.ArrivalTimeWithDelay), 0)
 }
 
-func (s *StopTimeUpdate) ConvertDeparture() {
-	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
-}
+//func (s *StopTimeUpdate) ConvertDeparture() {
+//	s.ConvertedDepartureTime = time.Unix(int64(*s.DepartureTime+int64(s.Delay)), 0)
+//}
 
 func (s *StopTimeUpdate) ConvertTimeToMinutesNoDelay() {
 	s.TimeInMinutesNoDelay = math.Floor(time.Until(s.ConvertedArrivalTimeNoDelay).Minutes()) + 1
