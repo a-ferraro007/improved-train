@@ -19,7 +19,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	log.Println("MTA SERVER v0.1.4")
+	log.Println("MTA SERVER v0.1.5")
 	Pools.Init()
 	staticData := Process() //process once when the server starts up
 
