@@ -39,7 +39,7 @@ type Station struct {
 	SouthDirection string `json:"southDirectionLabel"`
 }
 
-type SubwayStationMap struct {
+type SubwayLineMap struct {
 	NUMBERS ParsedStationMap
 	ACE     ParsedStationMap
 	BDFM    ParsedStationMap
@@ -57,10 +57,33 @@ type ParsedStationMap struct {
 }
 
 type StaticData struct {
-	Map SubwayStationMap `json:"map"`
+	Map SubwayLineMap `json:"map"`
 }
 
-func createSliceOfStations(data [][]string) []Station {
+func parseStaticTripsCSV(data [][]string) {
+	//tripSubwayMap := make(map[string]string, 0)
+	for i, line := range data {
+		var direction string
+		var headSign string
+		var shapeId string
+		if i > 0 {
+			for j, field := range line {
+				switch {
+				case j == 3:
+					headSign = field
+				case j == 4:
+					direction = field
+				case j == 6:
+					shapeId = field
+				}
+			}
+		}
+		log.Println(direction, shapeId, headSign)
+
+	}
+}
+
+func parseStaticStationCSV(data [][]string) []Station {
 	stationList := make([]Station, 0)
 	for i, line := range data {
 		if i > 0 {
@@ -97,8 +120,8 @@ func createSliceOfStations(data [][]string) []Station {
 	return stationList
 }
 
-func createStationToSubwayLineMap(stations []Station) SubwayStationMap {
-	stationMap := SubwayStationMap{
+func createStationToSubwayLineMap(stations []Station) SubwayLineMap {
+	stationMap := SubwayLineMap{
 		NUMBERS: ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
 		ACE:     ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
 		BDFM:    ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
@@ -169,8 +192,8 @@ func containsAny(str string, substr string) bool {
 	return false
 }
 
-func Process() StaticData {
-	f, err := os.Open("./stations.csv")
+func readCSV(path string) [][]string {
+	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -179,13 +202,19 @@ func Process() StaticData {
 	csvReader := csv.NewReader(f)
 	data, err := csvReader.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err) //change error handling, probably don't want to crash the server for this?
 	}
+	return data
+}
 
-	stations := createSliceOfStations(data)
-	stationMap := createStationToSubwayLineMap(stations)
+func Process() StaticData {
+	stationData := readCSV("./stations.csv")
+	stations := parseStaticStationCSV(stationData)
+	stationSubwaLineMap := createStationToSubwayLineMap(stations)
 
+	data := readCSV("./google_transit/trips.csv")
+	parseStaticTripsCSV(data)
 	return StaticData{
-		Map: stationMap,
+		Map: stationSubwaLineMap,
 	}
 }

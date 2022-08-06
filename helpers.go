@@ -65,7 +65,6 @@ func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 			}
 		}
 		if update.Departure != nil {
-			log.Println("UPDATE DEP", update)
 			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
 			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
 		}
