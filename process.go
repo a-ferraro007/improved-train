@@ -60,8 +60,13 @@ type StaticData struct {
 	Map SubwayLineMap `json:"map"`
 }
 
+type HeadSign struct {
+	North string
+	South string
+}
+
 func parseStaticTripsCSV(data [][]string) {
-	//tripSubwayMap := make(map[string]string, 0)
+	tripSubwayMap := make(map[string]HeadSign, 0)
 	for i, line := range data {
 		var direction string
 		var headSign string
@@ -78,9 +83,14 @@ func parseStaticTripsCSV(data [][]string) {
 				}
 			}
 		}
-		log.Println(direction, shapeId, headSign)
-
+		switch {
+		case direction == "0":
+			tripSubwayMap[strings.Split(shapeId, ".")[0]] = HeadSign{North: headSign}
+		case direction == "1":
+			tripSubwayMap[strings.Split(shapeId, ".")[0]] = HeadSign{South: headSign}
+		}
 	}
+ log.Println(tripSubwayMap)
 }
 
 func parseStaticStationCSV(data [][]string) []Station {
