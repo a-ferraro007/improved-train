@@ -216,7 +216,7 @@ func readCSV(path string) [][]string {
 }
 
 func Process() StaticData {
-	stationData := readCSV("./stations.csv")
+	stationData := readCSV("./google_transit/stations.csv")
 	stations := parseStaticStationCSV(stationData)
 	stationSubwaLineMap := createStationToSubwayLineMap(stations)
 
