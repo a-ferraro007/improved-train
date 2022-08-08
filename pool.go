@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func newPool(subwayLine string) *Pool {
+func newPool(subwayLine string, headSignMap map[string]TripHeadSign) *Pool {
 	return &Pool{
 		subwayLine:         subwayLine,
 		clients:            make(map[uuid.UUID]*Client), //make(map[*Client]bool),
@@ -21,6 +21,7 @@ func newPool(subwayLine string) *Pool {
 		cachedStopTimeUpdate: make(map[string][]*gtfs.TripUpdate_StopTimeUpdate),
 		ticker:               time.NewTicker(10 * time.Second),
 		done:                 make(chan bool),
+		TripHeadSignMap:      headSignMap,
 	}
 }
 

@@ -47,12 +47,13 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		}
 
 		if len(stopTimeUpdateSlice) > 0 {
-			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.subwayLine, client.pool.TripHeadSignMap)
 			arrivingTrain.Trains = unparsed
 			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
 
 		i := 0
+
 		for i < 2 {
 			client.writeJSON(Message{Client: client, Message: *arrivingTrain})
 			i++
@@ -79,11 +80,10 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		}
 
 		if len(stopTimeUpdateSlice) > 0 {
-			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.subwayLine, client.pool.TripHeadSignMap)
 			arrivingTrain.Trains = unparsed
 			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
-
 		client.writeJSON(Message{Client: client, Message: *arrivingTrain})
 	}
 }

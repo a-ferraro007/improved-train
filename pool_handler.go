@@ -13,11 +13,11 @@ func (p *PoolMap) Init() {
 	p.Map = make(map[string]*Pool)
 }
 
-func (p *PoolMap) createPool(subwayLine string) *Pool {
+func (p *PoolMap) createPool(subwayLine string, headSignMap map[string]TripHeadSign) *Pool {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
 
-	pool := newPool(subwayLine)
+	pool := newPool(subwayLine, headSignMap)
 	p.Map[subwayLine] = pool
 	log.Println(p.Map)
 	go pool.run()

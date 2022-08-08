@@ -21,6 +21,7 @@ type Pool struct {
 	cachedStopTimeUpdate map[string][]*gtfs.TripUpdate_StopTimeUpdate
 	ticker               *time.Ticker
 	done                 chan bool
+	TripHeadSignMap      map[string]TripHeadSign
 }
 
 type Client struct {
@@ -106,12 +107,12 @@ type ArrivingTrain struct {
 	SubwayLine   string            `json:"subwayLine"`
 	Trains       []*Train          `json:"trains"` //Return all trains to do whatever clientside
 	ParsedTrains ParsedByDirection `json:"parsedTrains"`
+	HeadSign     string            `json:"headsign"`
 }
 
 type Train struct {
-	DirectionV2 string          `json:"directionV2"`
-	Direction   string          `json:"direction"`
-	Train       *StopTimeUpdate `json:"train"`
+	Direction string          `json:"direction"`
+	Train     *StopTimeUpdate `json:"train"`
 }
 
 type ParsedByDirection struct {
@@ -120,6 +121,21 @@ type ParsedByDirection struct {
 	//Add ability to attach a custom data type here so I can
 	//use the config struct to write functions that can combine
 	//different data feeds into a single return object.
+}
+
+type ParsedStationMap struct {
+	Stations          []Station            `json:"stations"`
+	StationsByBorough map[string][]Station `json:"stationsByBorough"`
+}
+
+type StaticData struct {
+	StationMap    SubwayLineMap           `json:"stationMap"`
+	SubwayTripMap map[string]TripHeadSign `json:"subwayTripMap"`
+}
+
+type TripHeadSign struct {
+	North string
+	South string
 }
 
 type ServiceAlertHeader struct{}

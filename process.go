@@ -51,46 +51,44 @@ type SubwayLineMap struct {
 	SERVICE ParsedStationMap
 }
 
-type ParsedStationMap struct {
-	Stations          []Station            `json:"stations"`
-	StationsByBorough map[string][]Station `json:"stationsByBorough"`
-}
-
-type StaticData struct {
-	Map SubwayLineMap `json:"map"`
-}
-
-type HeadSign struct {
-	North string
-	South string
-}
-
-func parseStaticTripsCSV(data [][]string) {
-	tripSubwayMap := make(map[string]HeadSign, 0)
+func parseStaticTripsCSV(data [][]string) map[string]TripHeadSign {
+	tripSubwayMap := make(map[string]TripHeadSign, 0)
+	tripHeadSign := TripHeadSign{}
 	for i, line := range data {
 		var direction string
 		var headSign string
-		var shapeId string
+		//var shapeId string
+		var routeId string
 		if i > 0 {
 			for j, field := range line {
 				switch {
+				case j == 0:
+					//Mapping GS to S for now. Need to update to account
+					//For both Shuttles
+					if field == "GS" {
+						routeId = "S"
+					} else {
+						routeId = field
+					}
 				case j == 3:
 					headSign = field
 				case j == 4:
 					direction = field
-				case j == 6:
-					shapeId = field
 				}
 			}
 		}
-		switch {
-		case direction == "0":
-			tripSubwayMap[strings.Split(shapeId, ".")[0]] = HeadSign{North: headSign}
-		case direction == "1":
-			tripSubwayMap[strings.Split(shapeId, ".")[0]] = HeadSign{South: headSign}
+		if routeId != "" || headSign != "" {
+
+			switch {
+			case direction == "0":
+				tripHeadSign.North = headSign
+			case direction == "1":
+				tripHeadSign.South = headSign
+			}
+			tripSubwayMap[routeId] = tripHeadSign
 		}
 	}
- log.Println(tripSubwayMap)
+	return tripSubwayMap
 }
 
 func parseStaticStationCSV(data [][]string) []Station {
@@ -222,9 +220,11 @@ func Process() StaticData {
 	stations := parseStaticStationCSV(stationData)
 	stationSubwaLineMap := createStationToSubwayLineMap(stations)
 
-	data := readCSV("./google_transit/trips.csv")
-	parseStaticTripsCSV(data)
+	trips := readCSV("./google_transit/trips.csv")
+	subwayTripMap := parseStaticTripsCSV(trips)
+
 	return StaticData{
-		Map: stationSubwaLineMap,
+		StationMap:    stationSubwaLineMap,
+		SubwayTripMap: subwayTripMap,
 	}
 }

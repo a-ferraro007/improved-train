@@ -19,9 +19,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	log.Println("MTA SERVER v0.1.6")
+	log.Println("MTA SERVER v0.1.7")
 	Pools.Init()
-	staticData := Process() //process once when the server starts up
+	StaticData := Process() //process once when the server starts up
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -34,7 +34,7 @@ func main() {
 		stopId := r.URL.Query()["stopId"][0]
 
 		if Pools.Map[subwayLine] == nil {
-			Pools.createPool(subwayLine)
+			Pools.createPool(subwayLine, StaticData.SubwayTripMap)
 			Pools.insertIntoPool(subwayLine, stopId, conn)
 		} else {
 			Pools.insertIntoPool(subwayLine, stopId, conn)
@@ -66,7 +66,7 @@ func main() {
 			w.Write(json)
 		}
 
-		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, subwayLine, StaticData.SubwayTripMap)
 		trains := unparsed
 		parsedTrains := defaultSort(parsed)
 
@@ -83,7 +83,7 @@ func main() {
 
 	http.HandleFunc("/static", func(w http.ResponseWriter, r *http.Request) {
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		json, _ := json.Marshal(staticData)
+		json, _ := json.Marshal(StaticData)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)
 	})
