@@ -35,7 +35,7 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 	defer log.Printf("Closing Write Client: %v \n", client.UUID)
 
 	stopTimeUpdateSlice := make([]*StopTimeUpdate, 0)
-	arrivingTrain := &ArrivingTrain{ClientID: client.UUID, SubwayLine: client.config.subwayLine}
+	arrivingTrain := &ArrivingTrain{ClientID: client.UUID, SubwayLine: client.config.group}
 
 	if len(*cachedGTFSData) != 0 {
 		log.Printf("WRITE FROM CACHE: %v\n", client.UUID)
@@ -46,8 +46,9 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 			}
 		}
 
+		//log.Println(client.)
 		if len(stopTimeUpdateSlice) > 0 {
-			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.subwayLine, client.pool.TripHeadSignMap)
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.config.subway, client.pool.TripHeadSignMap)
 			arrivingTrain.Trains = unparsed
 			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}
@@ -80,7 +81,7 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		}
 
 		if len(stopTimeUpdateSlice) > 0 {
-			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.subwayLine, client.pool.TripHeadSignMap)
+			unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, client.config.subway, client.pool.TripHeadSignMap)
 			arrivingTrain.Trains = unparsed
 			arrivingTrain.ParsedTrains = client.config.funct(parsed)
 		}

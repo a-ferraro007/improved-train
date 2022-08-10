@@ -34,14 +34,14 @@ func (p *Pool) run() {
 		case client := <-p.unregister:
 			if _, ok := p.clients[client.UUID]; ok {
 				for _, c := range p.clients {
-					line := client.config.subwayLine
+					group := client.config.group
 					if client.UUID == c.UUID {
 						log.Printf("___________ REMOVING CLIENT:   %v ___________\n", client.UUID)
 						delete(p.clients, client.UUID)
 						close(client.send)
 
 						if len(p.clients) <= 0 {
-							Pools.deletePool(line)
+							Pools.deletePool(group)
 							return
 						}
 					}

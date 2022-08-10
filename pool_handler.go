@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"github.com/google/uuid"
@@ -25,28 +26,28 @@ func (p *PoolMap) createPool(subwayLine string, headSignMap map[string]TripHeadS
 	return pool
 }
 
-func (p *PoolMap) insertIntoPool(subwayLine string, stopId string, conn *websocket.Conn) {
+func (p *PoolMap) insertIntoPool(group string, subway string, stopId string, conn *websocket.Conn) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
 
-	pool := p.Map[subwayLine]
+	pool := p.Map[group]
 	log.Println(p.Map)
-
+	log.Println("CLIENT", NUMBERS_MAP[strings.ToUpper(subway)], strings.ToUpper(subway))
 	client := &Client{
-		UUID:       uuid.New(),
-		pool:       pool,
-		conn:       conn,
-		send:       make(chan []*gtfs.TripUpdate_StopTimeUpdate),
-		stopId:     stopId,
-		subwayLine: subwayLine,
-		config:     Config{stopId: stopId, subwayLine: subwayLine, sort: "ascending"},
-		fetching:   false,
+		UUID:     uuid.New(),
+		pool:     pool,
+		conn:     conn,
+		send:     make(chan []*gtfs.TripUpdate_StopTimeUpdate),
+		stopId:   stopId,
+		group:    group,
+		config:   Config{stopId: stopId, group: group, subway: NUMBERS_MAP[strings.ToUpper(subway)], sort: "ascending"},
+		fetching: false,
 	}
 	client.configureSort()
 	client.configureGenerator()
 
 	mV2 := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
-	mV2 = pool.cachedStopTimeUpdate[client.config.subwayLine]
+	mV2 = pool.cachedStopTimeUpdate[client.config.group]
 	pool.register <- client
 	go client.read()
 	go client.write(&mV2)

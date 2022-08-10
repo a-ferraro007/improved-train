@@ -25,23 +25,25 @@ type Pool struct {
 }
 
 type Client struct {
-	UUID       uuid.UUID
-	pool       *Pool
-	conn       *websocket.Conn
-	send       chan []*gtfs.TripUpdate_StopTimeUpdate
-	stopId     string
-	subwayLine string
-	config     Config
-	fetching   bool
+	UUID     uuid.UUID
+	pool     *Pool
+	conn     *websocket.Conn
+	send     chan []*gtfs.TripUpdate_StopTimeUpdate
+	stopId   string
+	group    string
+	subway   string
+	config   Config
+	fetching bool
 }
 
 type Config struct {
-	stopId     string
-	subwayLine string
-	sort       string
-	generate   string
-	funct      func(parsed ParsedByDirection) ParsedByDirection
-	generator  func(parsed ParsedByDirection) ParsedByDirection
+	stopId    string
+	group     string
+	subway    string
+	sort      string
+	generate  string
+	funct     func(parsed ParsedByDirection) ParsedByDirection
+	generator func(parsed ParsedByDirection) ParsedByDirection
 	//use this generator property to keep custom property generators
 	//seperate of the sorting function config property.
 }
@@ -104,7 +106,7 @@ func (s *StopTimeUpdate) AddDelay() {
 
 type ArrivingTrain struct {
 	ClientID     uuid.UUID         `json:"clientId"`
-	SubwayLine   string            `json:"subwayLine"`
+	SubwayLine   string            `json:"group"`
 	Trains       []*Train          `json:"trains"` //Return all trains to do whatever clientside
 	ParsedTrains ParsedByDirection `json:"parsedTrains"`
 	HeadSign     string            `json:"headsign"`
@@ -124,6 +126,7 @@ type ParsedByDirection struct {
 }
 
 type ParsedStationMap struct {
+	seen              map[string]bool
 	Stations          []Station            `json:"stations"`
 	StationsByBorough map[string][]Station `json:"stationsByBorough"`
 }
@@ -139,6 +142,47 @@ type TripHeadSign struct {
 }
 
 type ServiceAlertHeader struct{}
+
+type Station struct {
+	StationId      string `json:"stationId"`
+	ComplexId      string `json:"complexId"`
+	StopId         string `json:"stopId"`
+	SubwayLine     string `json:"subwayLine"`
+	StopName       string `json:"stopName"`
+	Borough        string `json:"borough"`
+	Routes         string `json:"routes"`
+	Lattitude      string `json:"lattitude"`
+	Longitude      string `json:"longitude"`
+	NorthDirection string `json:"northDirectionLabel"`
+	SouthDirection string `json:"southDirectionLabel"`
+}
+
+type SubwayLineMap struct {
+	One     *ParsedStationMap
+	Two     *ParsedStationMap
+	Three   *ParsedStationMap
+	Four    *ParsedStationMap
+	Five    *ParsedStationMap
+	Six     *ParsedStationMap
+	Seven   *ParsedStationMap
+	A       *ParsedStationMap
+	C       *ParsedStationMap
+	E       *ParsedStationMap
+	B       *ParsedStationMap
+	D       *ParsedStationMap
+	F       *ParsedStationMap
+	M       *ParsedStationMap
+	N       *ParsedStationMap
+	Q       *ParsedStationMap
+	R       *ParsedStationMap
+	W       *ParsedStationMap
+	L       *ParsedStationMap
+	G       *ParsedStationMap
+	S       *ParsedStationMap
+	J       *ParsedStationMap
+	Z       *ParsedStationMap
+	SERVICE ParsedStationMap
+}
 
 type Resp struct {
 	Header struct {

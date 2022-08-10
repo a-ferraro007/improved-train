@@ -29,15 +29,16 @@ func main() {
 			log.Printf("ERROR UPGRADING WEBSOCKET: %v", err)
 			return
 		}
-
-		subwayLine := r.URL.Query()["subwayLine"][0]
+		group := r.URL.Query()["group"][0]
+		subway := r.URL.Query()["subway"][0]
 		stopId := r.URL.Query()["stopId"][0]
 
-		if Pools.Map[subwayLine] == nil {
-			Pools.createPool(subwayLine, StaticData.SubwayTripMap)
-			Pools.insertIntoPool(subwayLine, stopId, conn)
+		log.Println("group", group)
+		if Pools.Map[group] == nil {
+			Pools.createPool(group, StaticData.SubwayTripMap)
+			Pools.insertIntoPool(group, subway, stopId, conn)
 		} else {
-			Pools.insertIntoPool(subwayLine, stopId, conn)
+			Pools.insertIntoPool(group, subway, stopId, conn)
 		}
 	})
 
@@ -46,10 +47,12 @@ func main() {
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
 
 		stopId := r.URL.Query()["stopId"][0]
-		subwayLine := r.URL.Query()["subwayLine"][0]
+		group := r.URL.Query()["group"][0]
+		subway := r.URL.Query()["subway"][0]
+
 		stopTimeUpdateSlice := make([]*StopTimeUpdate, 0)
 
-		data := handleFetchTransitData(subwayLine)
+		data := handleFetchTransitData(group)
 		log.Println(len(data))
 		for _, tripUpdate := range data {
 			match, stopTimeUpdate := findStopData(tripUpdate, stopId)
@@ -66,7 +69,7 @@ func main() {
 			w.Write(json)
 		}
 
-		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, subwayLine, StaticData.SubwayTripMap)
+		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice, subway, StaticData.SubwayTripMap)
 		trains := unparsed
 		parsedTrains := defaultSort(parsed)
 

@@ -7,49 +7,7 @@ import (
 	"strings"
 )
 
-/********************
-MOVE ALL OF THIS INTO A CLOUDFLARE WORKER?
-
-
-subway line needs to map to SUBWAY_LINE_REQUEST_URLS constant since this
-is how the pools are segmented.
-var SUBWAY_LINE_REQUEST_URLS = map[string]string {
- "L": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l",
- "ACE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
- "BDFM": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
- "G": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g",
- "JZ": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
- "NQRW": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
- "NUMBERS": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
- "SERVICE": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json",
-}
-********************/
-
-type Station struct {
-	StationId      string `json:"stationId"`
-	ComplexId      string `json:"complexId"`
-	StopId         string `json:"stopId"`
-	SubwayLine     string `json:"subwayLine"`
-	StopName       string `json:"stopName"`
-	Borough        string `json:"borough"`
-	Routes         string `json:"routes"`
-	Lattitude      string `json:"lattitude"`
-	Longitude      string `json:"longitude"`
-	NorthDirection string `json:"northDirectionLabel"`
-	SouthDirection string `json:"southDirectionLabel"`
-}
-
-type SubwayLineMap struct {
-	NUMBERS ParsedStationMap
-	ACE     ParsedStationMap
-	BDFM    ParsedStationMap
-	NQRW    ParsedStationMap
-	L       ParsedStationMap
-	G       ParsedStationMap
-	S       ParsedStationMap
-	JZ      ParsedStationMap
-	SERVICE ParsedStationMap
-}
+//MOVE ALL OF THIS INTO A CLOUDFLARE WORKER?
 
 func parseStaticTripsCSV(data [][]string) map[string]TripHeadSign {
 	tripSubwayMap := make(map[string]TripHeadSign, 0)
@@ -57,7 +15,6 @@ func parseStaticTripsCSV(data [][]string) map[string]TripHeadSign {
 	for i, line := range data {
 		var direction string
 		var headSign string
-		//var shapeId string
 		var routeId string
 		if i > 0 {
 			for j, field := range line {
@@ -129,75 +86,140 @@ func parseStaticStationCSV(data [][]string) []Station {
 }
 
 func createStationToSubwayLineMap(stations []Station) SubwayLineMap {
-	stationMap := SubwayLineMap{
-		NUMBERS: ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		ACE:     ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		BDFM:    ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		NQRW:    ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		L:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		G:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		SERVICE: ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		JZ:      ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		S:       ParsedStationMap{Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+	subwayLineMap := SubwayLineMap{
+		One:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Two:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Three: &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Four:  &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Five:  &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Six:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Seven: &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		A:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		C:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		E:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		B:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		D:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		F:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		M:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		J:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Z:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		L:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		G:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		N:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Q:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		R:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		W:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		S:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
 	}
 
 	leftover := make([]Station, 0)
 	for _, station := range stations {
 		routes := station.Routes
-		trim := strings.ToUpper(strings.ReplaceAll(routes, " ", ""))
+		split := strings.Split(strings.ToUpper(routes), " ")
+		for _, trim := range split {
+			//not sure what subway line this is right now
+			if trim == "SIR" {
+				leftover = append(leftover, station)
+				continue
+			}
 
-		//not sure what subway line this is right now
-		if trim == "SIR" {
-			leftover = append(leftover, station)
-			continue
-		}
-
-		if strings.Contains("L", trim) {
-			stationMap.L.Stations = append(stationMap.L.Stations, station)
-			stationMap.L.StationsByBorough[station.Borough] = append(stationMap.L.StationsByBorough[station.Borough], station)
-			//stationMap.L = append(stationMap.L, station)
-			//stationMap.L[station.borough] = append()
-		} else if strings.Contains("G", trim) {
-			//stationMap.G = append(stationMap.G, station)
-			stationMap.G.Stations = append(stationMap.G.Stations, station)
-			stationMap.G.StationsByBorough[station.Borough] = append(stationMap.G.StationsByBorough[station.Borough], station)
-		} else if strings.Contains("S", trim) {
-			//stationMap.S = append(stationMap.S, station)
-			stationMap.S.Stations = append(stationMap.S.Stations, station)
-			stationMap.S.StationsByBorough[station.Borough] = append(stationMap.S.StationsByBorough[station.Borough], station)
-		} else if containsAny("ACE", trim) {
-			//stationMap.ACE = append(stationMap.ACE, station)
-			stationMap.ACE.Stations = append(stationMap.ACE.Stations, station)
-			stationMap.ACE.StationsByBorough[station.Borough] = append(stationMap.ACE.StationsByBorough[station.Borough], station)
-		} else if containsAny("BDFM", trim) {
-			//stationMap.BDFM = append(stationMap.BDFM, station)
-			stationMap.BDFM.Stations = append(stationMap.BDFM.Stations, station)
-			stationMap.BDFM.StationsByBorough[station.Borough] = append(stationMap.BDFM.StationsByBorough[station.Borough], station)
-		} else if containsAny("JZ", trim) {
-			//stationMap.JZ = append(stationMap.JZ, station)
-			stationMap.JZ.Stations = append(stationMap.JZ.Stations, station)
-			stationMap.JZ.StationsByBorough[station.Borough] = append(stationMap.JZ.StationsByBorough[station.Borough], station)
-		} else if containsAny("NQRW", trim) {
-			//stationMap.NQRW = append(stationMap.NQRW, station)
-			stationMap.NQRW.Stations = append(stationMap.NQRW.Stations, station)
-			stationMap.NQRW.StationsByBorough[station.Borough] = append(stationMap.NQRW.StationsByBorough[station.Borough], station)
-		} else if containsAny("1234567", trim) {
-			//stationMap.NUMBERS = append(stationMap.NUMBERS, station)
-			stationMap.NUMBERS.Stations = append(stationMap.NUMBERS.Stations, station)
-			stationMap.NUMBERS.StationsByBorough[station.Borough] = append(stationMap.NUMBERS.StationsByBorough[station.Borough], station)
+			switch {
+			case trim == One:
+				subwayLineMap.One.Stations = append(subwayLineMap.One.Stations, station)
+				subwayLineMap.One.StationsByBorough[station.Borough] = append(subwayLineMap.One.StationsByBorough[station.Borough], station)
+				subwayLineMap.One.seen[trim] = true
+			case trim == Two:
+				subwayLineMap.Two.Stations = append(subwayLineMap.Two.Stations, station)
+				subwayLineMap.Two.StationsByBorough[station.Borough] = append(subwayLineMap.Two.StationsByBorough[station.Borough], station)
+				subwayLineMap.Two.seen[trim] = true
+			case trim == Three:
+				subwayLineMap.Three.Stations = append(subwayLineMap.Three.Stations, station)
+				subwayLineMap.Three.StationsByBorough[station.Borough] = append(subwayLineMap.Three.StationsByBorough[station.Borough], station)
+				subwayLineMap.Three.seen[trim] = true
+			case trim == Four:
+				subwayLineMap.Four.Stations = append(subwayLineMap.Four.Stations, station)
+				subwayLineMap.Four.StationsByBorough[station.Borough] = append(subwayLineMap.Four.StationsByBorough[station.Borough], station)
+				subwayLineMap.Four.seen[trim] = true
+			case trim == Five:
+				subwayLineMap.Five.Stations = append(subwayLineMap.Five.Stations, station)
+				subwayLineMap.Five.StationsByBorough[station.Borough] = append(subwayLineMap.Five.StationsByBorough[station.Borough], station)
+				subwayLineMap.Five.seen[trim] = true
+			case trim == Six:
+				subwayLineMap.Six.Stations = append(subwayLineMap.Six.Stations, station)
+				subwayLineMap.Six.StationsByBorough[station.Borough] = append(subwayLineMap.Six.StationsByBorough[station.Borough], station)
+				subwayLineMap.Six.seen[trim] = true
+			case trim == Seven:
+				subwayLineMap.Seven.Stations = append(subwayLineMap.Seven.Stations, station)
+				subwayLineMap.Seven.StationsByBorough[station.Borough] = append(subwayLineMap.Seven.StationsByBorough[station.Borough], station)
+				subwayLineMap.Seven.seen[trim] = true
+			case trim == A:
+				subwayLineMap.A.Stations = append(subwayLineMap.A.Stations, station)
+				subwayLineMap.A.StationsByBorough[station.Borough] = append(subwayLineMap.A.StationsByBorough[station.Borough], station)
+				subwayLineMap.A.seen[trim] = true
+			case trim == C:
+				subwayLineMap.C.Stations = append(subwayLineMap.C.Stations, station)
+				subwayLineMap.C.StationsByBorough[station.Borough] = append(subwayLineMap.C.StationsByBorough[station.Borough], station)
+				subwayLineMap.C.seen[trim] = true
+			case trim == E:
+				subwayLineMap.E.Stations = append(subwayLineMap.E.Stations, station)
+				subwayLineMap.E.StationsByBorough[station.Borough] = append(subwayLineMap.E.StationsByBorough[station.Borough], station)
+				subwayLineMap.E.seen[trim] = true
+			case trim == B:
+				subwayLineMap.B.Stations = append(subwayLineMap.B.Stations, station)
+				subwayLineMap.B.StationsByBorough[station.Borough] = append(subwayLineMap.B.StationsByBorough[station.Borough], station)
+				subwayLineMap.B.seen[trim] = true
+			case trim == D:
+				subwayLineMap.D.Stations = append(subwayLineMap.D.Stations, station)
+				subwayLineMap.D.StationsByBorough[station.Borough] = append(subwayLineMap.D.StationsByBorough[station.Borough], station)
+				subwayLineMap.D.seen[trim] = true
+			case trim == F:
+				subwayLineMap.F.Stations = append(subwayLineMap.F.Stations, station)
+				subwayLineMap.F.StationsByBorough[station.Borough] = append(subwayLineMap.F.StationsByBorough[station.Borough], station)
+				subwayLineMap.F.seen[trim] = true
+			case trim == M:
+				subwayLineMap.M.Stations = append(subwayLineMap.M.Stations, station)
+				subwayLineMap.M.StationsByBorough[station.Borough] = append(subwayLineMap.M.StationsByBorough[station.Borough], station)
+				subwayLineMap.M.seen[trim] = true
+			case trim == N:
+				subwayLineMap.N.Stations = append(subwayLineMap.N.Stations, station)
+				subwayLineMap.N.StationsByBorough[station.Borough] = append(subwayLineMap.N.StationsByBorough[station.Borough], station)
+				subwayLineMap.N.seen[trim] = true
+			case trim == Q:
+				subwayLineMap.Q.Stations = append(subwayLineMap.Q.Stations, station)
+				subwayLineMap.Q.StationsByBorough[station.Borough] = append(subwayLineMap.Q.StationsByBorough[station.Borough], station)
+				subwayLineMap.Q.seen[trim] = true
+			case trim == R:
+				subwayLineMap.R.Stations = append(subwayLineMap.R.Stations, station)
+				subwayLineMap.R.StationsByBorough[station.Borough] = append(subwayLineMap.R.StationsByBorough[station.Borough], station)
+				subwayLineMap.R.seen[trim] = true
+			case trim == W:
+				subwayLineMap.W.Stations = append(subwayLineMap.W.Stations, station)
+				subwayLineMap.W.StationsByBorough[station.Borough] = append(subwayLineMap.W.StationsByBorough[station.Borough], station)
+				subwayLineMap.W.seen[trim] = true
+			case trim == L:
+				subwayLineMap.L.Stations = append(subwayLineMap.L.Stations, station)
+				subwayLineMap.L.StationsByBorough[station.Borough] = append(subwayLineMap.L.StationsByBorough[station.Borough], station)
+				subwayLineMap.L.seen[trim] = true
+			case trim == G:
+				subwayLineMap.G.Stations = append(subwayLineMap.G.Stations, station)
+				subwayLineMap.G.StationsByBorough[station.Borough] = append(subwayLineMap.G.StationsByBorough[station.Borough], station)
+				subwayLineMap.G.seen[trim] = true
+			case trim == S:
+				subwayLineMap.S.Stations = append(subwayLineMap.S.Stations, station)
+				subwayLineMap.S.StationsByBorough[station.Borough] = append(subwayLineMap.S.StationsByBorough[station.Borough], station)
+				subwayLineMap.S.seen[trim] = true
+			case trim == J:
+				subwayLineMap.J.Stations = append(subwayLineMap.J.Stations, station)
+				subwayLineMap.J.StationsByBorough[station.Borough] = append(subwayLineMap.J.StationsByBorough[station.Borough], station)
+				subwayLineMap.J.seen[trim] = true
+			case trim == Z:
+				subwayLineMap.Z.Stations = append(subwayLineMap.Z.Stations, station)
+				subwayLineMap.Z.StationsByBorough[station.Borough] = append(subwayLineMap.Z.StationsByBorough[station.Borough], station)
+				subwayLineMap.Z.seen[trim] = true
+			}
 		}
 	}
-
-	return stationMap
-}
-
-func containsAny(str string, substr string) bool {
-	for _, l := range str {
-		if strings.Contains(substr, string(l)) {
-			return true
-		}
-	}
-	return false
+	return subwayLineMap
 }
 
 func readCSV(path string) [][]string {
@@ -218,13 +240,13 @@ func readCSV(path string) [][]string {
 func Process() StaticData {
 	stationData := readCSV("./google_transit/stations.csv")
 	stations := parseStaticStationCSV(stationData)
-	stationSubwaLineMap := createStationToSubwayLineMap(stations)
-
+	stationSubwayLineMap := createStationToSubwayLineMap(stations)
+	//log.Println(stationSubwayLineMap.G)
 	trips := readCSV("./google_transit/trips.csv")
 	subwayTripMap := parseStaticTripsCSV(trips)
 
 	return StaticData{
-		StationMap:    stationSubwaLineMap,
+		StationMap:    stationSubwayLineMap,
 		SubwayTripMap: subwayTripMap,
 	}
 }

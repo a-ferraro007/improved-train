@@ -9,7 +9,9 @@ import (
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
 
-func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate, subwayLine string, subwayTripMap map[string]TripHeadSign) ([]*Train, ParsedByDirection) {
+func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate, subway string, subwayTripMap map[string]TripHeadSign) ([]*Train, ParsedByDirection) {
+
+	log.Println("CONVERT", subway, subwayTripMap[subway])
 	unparsed := make([]*Train, 0)
 	parsed := ParsedByDirection{Northbound: make([]*Train, 0), SouthBound: make([]*Train, 0)}
 	for _, trip := range stopTimeUpdateSlice {
@@ -36,10 +38,10 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate, subwayLi
 
 		//Create helper for this to parse Northbound & Southbound trains
 		if direction == "n" {
-			train.Direction = subwayTripMap[subwayLine].North
+			train.Direction = subwayTripMap[subway].North
 			parsed.Northbound = append(parsed.Northbound, train)
 		} else if direction == "s" {
-			train.Direction = subwayTripMap[subwayLine].South
+			train.Direction = subwayTripMap[subway].South
 			parsed.SouthBound = append(parsed.SouthBound, train)
 		}
 
