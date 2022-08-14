@@ -87,29 +87,29 @@ func parseStaticStationCSV(data [][]string) []Station {
 
 func createStationToSubwayLineMap(stations []Station) SubwayLineMap {
 	subwayLineMap := SubwayLineMap{
-		One:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Two:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Three: &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Four:  &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Five:  &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Six:   &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Seven: &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		A:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		C:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		E:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		B:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		D:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		F:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		M:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		J:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Z:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		L:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		G:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		N:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		Q:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		R:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		W:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
-		S:     &ParsedStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		One:   &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Two:   &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Three: &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Four:  &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Five:  &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Six:   &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Seven: &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		A:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		C:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		E:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		B:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		D:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		F:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		M:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		J:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Z:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		L:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		G:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		N:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		Q:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		R:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		W:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
+		S:     &BoroughStationMap{seen: make(map[string]bool, 0), Stations: make([]Station, 0), StationsByBorough: map[string][]Station{}},
 	}
 
 	leftover := make([]Station, 0)
@@ -238,11 +238,10 @@ func readCSV(path string) [][]string {
 }
 
 func Process() StaticData {
-	stationData := readCSV("./google_transit/stations.csv")
+	stationData := readCSV("./static_transit/stations.csv")
 	stations := parseStaticStationCSV(stationData)
 	stationSubwayLineMap := createStationToSubwayLineMap(stations)
-	//log.Println(stationSubwayLineMap.G)
-	trips := readCSV("./google_transit/trips.csv")
+	trips := readCSV("./static_transit/trips.csv")
 	subwayTripMap := parseStaticTripsCSV(trips)
 
 	return StaticData{

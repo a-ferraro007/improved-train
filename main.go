@@ -55,8 +55,8 @@ func main() {
 		data := handleFetchTransitData(group)
 		log.Println(len(data))
 		for _, tripUpdate := range data {
-			match, stopTimeUpdate := findStopData(tripUpdate, stopId)
-			if match {
+			stopTimeUpdate := findStopData(tripUpdate, stopId)
+			if stopTimeUpdate != nil {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}

@@ -40,8 +40,8 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 	if len(*cachedGTFSData) != 0 {
 		log.Printf("WRITE FROM CACHE: %v\n", client.UUID)
 		for _, tripUpdate := range *cachedGTFSData {
-			match, stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
-			if match {
+			stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
+			if stopTimeUpdate != nil {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}
@@ -74,8 +74,8 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate_StopTimeUpdate) {
 		stopTimeUpdateSlice = make([]*StopTimeUpdate, 0)
 
 		for _, tripUpdate := range data {
-			match, stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
-			if match {
+			stopTimeUpdate := findStopData(tripUpdate, client.config.stopId)
+			if stopTimeUpdate != nil {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}

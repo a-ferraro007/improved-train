@@ -14,34 +14,32 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate, subway s
 	log.Println("CONVERT", subway, subwayTripMap[subway])
 	unparsed := make([]*Train, 0)
 	parsed := ParsedByDirection{Northbound: make([]*Train, 0), SouthBound: make([]*Train, 0)}
-	for _, trip := range stopTimeUpdateSlice {
+	for _, stopTimeUpdate := range stopTimeUpdateSlice {
 		train := &Train{}
-		train.Train = trip
+		train.Train = stopTimeUpdate
 		if train.Train.ArrivalTime == nil {
 			continue
 		}
-		train.Train.AddDelay()
-		train.Train.ConvertArrivalNoDelay()
-		train.Train.ConvertArrivalWithDelay()
-		train.Train.ConvertTimeToMinutesNoDelay()
-		train.Train.ConvertTimeToMinutesWithDelay()
-		//train.Train.ConvertDeparture()
+		location, _ := time.LoadLocation("America/New_York")
+		train.Train.ConvertArrival()
+		train.Train.ConvertDeparture()
+		train.Train.ConvertTimeToMinutes()
 
-		if train.Train.TimeInMinutes < 0 {
+		if time.Now().In(location).After(train.Train.ConvertedDepartureTime) {
 			//Sometimes time update data is stale so we skip any times that are in the past
-			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedArrivalTimeNoDelay)
+			log.Printf("NEGATIVE TIME IN MINUTES: %v\n", train.Train.ConvertedDepartureTime)
 			continue
 		}
 		//There's definitely a direction field somewhere in this data to use instead
-		idSplit := strings.Split(trip.Id, "")
+		idSplit := strings.Split(stopTimeUpdate.Id, "")
 		direction := strings.ToLower(idSplit[len(idSplit)-1])
 
 		//Create helper for this to parse Northbound & Southbound trains
 		if direction == "n" {
-			train.Direction = subwayTripMap[subway].North
+			train.HeadSign = subwayTripMap[subway].North
 			parsed.Northbound = append(parsed.Northbound, train)
 		} else if direction == "s" {
-			train.Direction = subwayTripMap[subway].South
+			train.HeadSign = subwayTripMap[subway].South
 			parsed.SouthBound = append(parsed.SouthBound, train)
 		}
 
@@ -52,36 +50,39 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate, subway s
 }
 
 //Get rid boolean return value
-func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
-	match := false
+func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) *StopTimeUpdate {
 	stopTimeUpdate := StopTimeUpdate{}
 	if strings.Contains(update.GetStopId(), stopID) {
-		match = true
 		stopTimeUpdate.Id = update.GetStopId()
+
 		if update.Arrival != nil {
 			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
 			if update.GetArrival().Delay != nil {
-				stopTimeUpdate.Delay = *update.GetArrival().Delay
+				stopTimeUpdate.ArrivalDelay = *update.GetArrival().Delay
+				*stopTimeUpdate.ArrivalTime += int64(stopTimeUpdate.ArrivalDelay)
 			}
 		}
 		if update.Departure != nil {
 			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+			if update.GetDeparture().Delay != nil {
+				stopTimeUpdate.DepartureDelay = *update.GetDeparture().Delay
+				*stopTimeUpdate.DepartureTime += int64(stopTimeUpdate.DepartureDelay)
+			}
 		}
 	}
 
-	return match, &stopTimeUpdate
+	return &stopTimeUpdate
 }
 
 func defaultSort(parsed ParsedByDirection) ParsedByDirection {
 	log.Println("DEFAULT SORT", len(parsed.Northbound))
 
 	sort.SliceStable(parsed.Northbound, func(i, j int) bool {
-		return parsed.Northbound[i].Train.TimeInMinutes < parsed.Northbound[j].Train.TimeInMinutes
+		return *parsed.Northbound[i].Train.DepartureTime < *parsed.Northbound[j].Train.DepartureTime
 	})
 
 	sort.SliceStable(parsed.SouthBound, func(i, j int) bool {
-		return parsed.SouthBound[i].Train.TimeInMinutes < parsed.SouthBound[j].Train.TimeInMinutes
+		return *parsed.SouthBound[i].Train.DepartureTime < *parsed.SouthBound[j].Train.DepartureTime
 	})
 
 	return parsed
