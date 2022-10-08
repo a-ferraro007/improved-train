@@ -56,7 +56,6 @@ func FindStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 	stopTimeUpdate := types.StopTimeUpdate{}
 	if strings.Contains(update.GetStopId(), stopID) {
 		match = true
-
 		stopTimeUpdate.ID = update.GetStopId()
 		stopTimeUpdate.ArrivalTime = update.GetArrival().Time
 		stopTimeUpdate.DepartureTime = update.GetDeparture().Time

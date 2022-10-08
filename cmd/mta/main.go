@@ -23,7 +23,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	log.Println("MTA SERVER v0.1.4")
+	log.Println("MTA SERVER v0.2.0")
 	clientpool.Init()
 	stations := utils.Process() //process once when the server starts up
 
@@ -57,9 +57,7 @@ func main() {
 			}
 		}
 
-		log.Println(stopTimeUpdateSlice)
 		if len(stopTimeUpdateSlice) <= 0 {
-			log.Println("LESS")
 			json, _ := json.Marshal("empty")
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(json)
@@ -81,7 +79,7 @@ func main() {
 	})
 
 	http.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(w, "Hello, i'm a golang microservice")
+		log.Println(w, "Stations Endpoint")
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
 		json, _ := json.Marshal(stations)
 		w.Header().Set("Content-Type", "application/json")

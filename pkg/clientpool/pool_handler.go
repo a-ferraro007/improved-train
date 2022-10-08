@@ -41,7 +41,7 @@ func createPool(subwayLine string) *Pool {
 
 	pool := newPool(subwayLine)
 	Pools.Map[subwayLine] = pool
-	log.Println(Pools.Map)
+
 	go pool.run()
 	go pool.fetchData()
 	return pool
@@ -50,9 +50,8 @@ func createPool(subwayLine string) *Pool {
 func insertIntoPool(subwayLine string, stopID string, conn *websocket.Conn) {
 	Pools.Mutex.Lock()
 	defer Pools.Mutex.Unlock()
-
+	log.Println("____________INSERT____________")
 	pool := Pools.Map[subwayLine]
-	log.Println(Pools.Map)
 
 	client := &Client{
 		UUID:       uuid.New(),
@@ -67,11 +66,11 @@ func insertIntoPool(subwayLine string, stopID string, conn *websocket.Conn) {
 	client.ConfigureSort()
 	client.ConfigureGenerator()
 
-	mV2 := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
-	mV2 = pool.CachedStopTimeUpdate[client.Config.SubwayLine]
+	cache := make([]*gtfs.TripUpdate_StopTimeUpdate, 0)
+	cache = pool.CachedStopTimeUpdate[client.Config.SubwayLine]
 	pool.Register <- client
 	go client.read()
-	go client.write(&mV2)
+	go client.write(&cache)
 }
 
 //DeletePool function
@@ -81,5 +80,5 @@ func (p *PoolMap) DeletePool(subwayLine string) {
 
 	p.Map[subwayLine].Done <- true
 	delete(p.Map, subwayLine)
-	log.Println("POOL MAP: ", p.Map)
+	log.Printf("Deleted Pool: %v, Pool Map: %v ", subwayLine, p.Map)
 }
