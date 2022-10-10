@@ -50,9 +50,9 @@ func (p *Pool) run() {
 				for _, c := range p.Clients {
 					line := client.Config.SubwayLine
 					if client.UUID == c.UUID {
-						log.Printf("___________ REMOVING CLIENT:   %v ___________\n", client.UUID)
-						delete(p.Clients, client.UUID)
+						log.Printf("----------REMOVING CLIENT: %v ----------\n", client.UUID)
 						close(client.Send)
+						delete(p.Clients, client.UUID)
 
 						if len(p.Clients) <= 0 && line != "" {
 							Pools.DeletePool(line)

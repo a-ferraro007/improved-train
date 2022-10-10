@@ -34,6 +34,7 @@ func (client *Client) read() {
 		log.Printf("Closing Read Client: %v \n", client.UUID)
 		client.Pool.Unregister <- client
 		client.Conn.Close()
+		log.Printf("+++++++++++++++Client Closed %v +++++++++++++++ \n", client.UUID)
 	}()
 
 	for {
