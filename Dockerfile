@@ -3,24 +3,22 @@
 #FROM nginx
 #COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
-FROM golang:1.18-alpine
+FROM golang:1.18-alpine AS builder
 
-#Create directory inside Docker Image
 WORKDIR /app
 
-#Copy Go module files
-COPY go.mod ./
-COPY go.sum ./
+COPY . /app
 
-#Download go modules
-RUN go mod download
+RUN cd /app/cmd/mta && go build -o main.go
 
-#Copy source into Docker Image
-COPY *.go ./
 
-RUN go build -o /mta
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY static_transit/ ./static_transit
+COPY --from=builder /app/cmd/mta /app
 
 EXPOSE 8080
-
-CMD ["/mta"]
-
+CMD ["./main.go", "run"]
