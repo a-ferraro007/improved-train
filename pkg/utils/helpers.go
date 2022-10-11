@@ -17,12 +17,15 @@ func ConvertToTrainSliceAndParse(stopTimeUpdateSlice []*types.StopTimeUpdate) ([
 	for _, trip := range stopTimeUpdateSlice {
 		train := &types.Train{}
 		train.Train = trip
+		if train.Train.ArrivalTime == nil {
+			continue
+		}
 		train.Train.AddDelay()
 		train.Train.ConvertArrivalNoDelay()
 		train.Train.ConvertArrivalWithDelay()
 		train.Train.ConvertTimeToMinutesNoDelay()
 		train.Train.ConvertTimeToMinutesWithDelay()
-		train.Train.ConvertDeparture()
+		//train.Train.ConvertDeparture()
 
 		if train.Train.TimeInMinutes < 0 {
 			//Sometimes time update data is stale so we skip any times that are in the past
