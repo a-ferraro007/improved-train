@@ -8,43 +8,43 @@ services:
     image: registry.digitalocean.com/mta-times/mta_goservice:latest
     ports:
       - '8080:8080'
-    networks:
-      - app-network
-  nginx:
-    restart: always
-    image: nginx:latest
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - /var/www/html:/var/www/html
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - dhparam:/etc/ssl/certs
-    depends_on:
-      - 'goservice'
-    networks:
-      - app-network
-  certbot:
-    image: certbot/certbot:latest
-    container_name: certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - /var/www/html:/var/www/html
-    depends_on:
-      - nginx
-    command: certonly  --webroot --webroot-path=/var/www/html --email adferra24@gmail.com --agree-tos --no-eff-email --force-renewal -d mta.tony.place
-volumes:
-  certbot-etc:
-  certbot-var:
-  dhparam:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/tony/dev/mta/dhparam/
-      o: bind
-networks:
-  app-network:
-    driver: bridge
+#    networks:
+#      - app-network
+#  nginx:
+#    restart: always
+#    image: nginx:latest
+#    ports:
+#      - '80:80'
+#      - '443:443'
+#    volumes:
+#      - /var/www/html:/var/www/html
+#      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#      - certbot-etc:/etc/letsencrypt
+#      - certbot-var:/var/lib/letsencrypt
+#      - dhparam:/etc/ssl/certs
+#    depends_on:
+#      - 'goservice'
+#    networks:
+#      - app-network
+#  certbot:
+#    image: certbot/certbot:latest
+#    container_name: certbot
+#    volumes:
+#      - certbot-etc:/etc/letsencrypt
+#      - certbot-var:/var/lib/letsencrypt
+#      - /var/www/html:/var/www/html
+#    depends_on:
+#      - nginx
+#    command: certonly  --webroot --webroot-path=/var/www/html --email adferra24@gmail.com --agree-tos --no-eff-email --force-renewal -d mta.tony.place
+#volumes:
+#  certbot-etc:
+#  certbot-var:
+#  dhparam:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      device: /home/tony/dev/mta/dhparam/
+#      o: bind
+#networks:
+#  app-network:
+#    driver: bridge

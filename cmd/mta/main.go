@@ -34,10 +34,14 @@ func main() {
 			return
 		}
 
-		subwayLine := r.URL.Query()["subwayLine"][0]
-		stopID := r.URL.Query()["stopID"][0]
+		subwayLine := r.URL.Query()["subwayLine"]
+		stopID := r.URL.Query()["stopID"]
 
-		clientpool.HandleNewConnection(subwayLine, stopID, conn)
+		if len(stopID) == 0 || len(subwayLine) == 0 {
+			return
+		}
+
+		clientpool.HandleNewConnection(subwayLine[0], stopID[0], conn)
 	})
 
 	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
