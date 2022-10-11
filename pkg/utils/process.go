@@ -187,9 +187,6 @@ func Process() SubwayStationMap {
 	}
 
 	stations := createSliceOfStations(data)
-	stationMap := createStationToSubwayLineMap(stations)
+	return createStationToSubwayLineMap(stations)
 
-	return StaticData{
-		Map: stationMap,
-	}
 }

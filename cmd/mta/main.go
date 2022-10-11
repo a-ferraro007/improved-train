@@ -78,14 +78,10 @@ func main() {
 
 	})
 
-<<<<<<< HEAD:cmd/mta/main.go
 	http.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(w, "Stations Endpoint")
-=======
-	http.HandleFunc("/static", func(w http.ResponseWriter, r *http.Request) {
->>>>>>> main:main.go
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		json, _ := json.Marshal(staticData)
+		json, _ := json.Marshal(stations)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)
 	})
