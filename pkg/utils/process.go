@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/csv"
@@ -25,10 +25,11 @@ var SUBWAY_LINE_REQUEST_URLS = map[string]string {
 }
 ********************/
 
+//Station struct
 type Station struct {
-	StationId      string `json:"stationId"`
-	ComplexId      string `json:"complexId"`
-	StopId         string `json:"stopId"`
+	StationID      string `json:"stationId"`
+	ComplexID      string `json:"complexId"`
+	StopID         string `json:"stopID"`
 	SubwayLine     string `json:"subwayLine"`
 	StopName       string `json:"stopName"`
 	Borough        string `json:"borough"`
@@ -39,6 +40,8 @@ type Station struct {
 	SouthDirection string `json:"southDirectionLabel"`
 }
 
+//SubwayStationMap is a slice of stations mapped to a
+//subway line
 type SubwayStationMap struct {
 	NUMBERS ParsedStationMap
 	ACE     ParsedStationMap
@@ -68,11 +71,11 @@ func createSliceOfStations(data [][]string) []Station {
 			for j, field := range line {
 				switch {
 				case j == 0:
-					station.StationId = field
+					station.StationID = field
 				case j == 1:
-					station.ComplexId = field
+					station.ComplexID = field
 				case j == 2:
-					station.StopId = field
+					station.StopID = field
 				case j == 4:
 					station.SubwayLine = field
 				case j == 5:
@@ -169,8 +172,9 @@ func containsAny(str string, substr string) bool {
 	return false
 }
 
-func Process() StaticData {
-	f, err := os.Open("./stations.csv")
+//Process function
+func Process() SubwayStationMap {
+	f, err := os.Open("./static_transit/stations.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,9 +187,6 @@ func Process() StaticData {
 	}
 
 	stations := createSliceOfStations(data)
-	stationMap := createStationToSubwayLineMap(stations)
+	return createStationToSubwayLineMap(stations)
 
-	return StaticData{
-		Map: stationMap,
-	}
 }

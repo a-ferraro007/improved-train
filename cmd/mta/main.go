@@ -5,10 +5,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/a-ferraro007/improved-train/pkg/clientpool"
+	"github.com/a-ferraro007/improved-train/pkg/types"
+	"github.com/a-ferraro007/improved-train/pkg/utils"
 	"github.com/gorilla/websocket"
 )
 
-var Pools PoolMap
+//Pools is a map that holds all of the running pools organized by subwaygroup
+//var Pools clientpool.PoolMap
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -19,9 +23,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	log.Println("MTA SERVER v0.1.5")
-	Pools.Init()
-	staticData := Process() //process once when the server starts up
+	log.Println("MTA SERVER v0.2.0")
+	clientpool.Init()
+	stations := utils.Process() //process once when the server starts up
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -31,46 +35,39 @@ func main() {
 		}
 
 		subwayLine := r.URL.Query()["subwayLine"][0]
-		stopId := r.URL.Query()["stopId"][0]
+		stopID := r.URL.Query()["stopID"][0]
 
-		if Pools.Map[subwayLine] == nil {
-			Pools.createPool(subwayLine)
-			Pools.insertIntoPool(subwayLine, stopId, conn)
-		} else {
-			Pools.insertIntoPool(subwayLine, stopId, conn)
-		}
+		clientpool.HandleNewConnection(subwayLine, stopID, conn)
 	})
 
 	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("TRASNIT DATE")
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
 
-		stopId := r.URL.Query()["stopId"][0]
+		stopID := r.URL.Query()["stopID"][0]
 		subwayLine := r.URL.Query()["subwayLine"][0]
-		stopTimeUpdateSlice := make([]*StopTimeUpdate, 0)
+		stopTimeUpdateSlice := make([]*types.StopTimeUpdate, 0)
 
-		data := handleFetchTransitData(subwayLine)
+		data := utils.HandleFetchTransitData(subwayLine)
 		log.Println(len(data))
 		for _, tripUpdate := range data {
-			match, stopTimeUpdate := findStopData(tripUpdate, stopId)
+			match, stopTimeUpdate := utils.FindStopData(tripUpdate, stopID)
 			if match {
 				stopTimeUpdateSlice = append(stopTimeUpdateSlice, stopTimeUpdate)
 			}
 		}
 
-		log.Println(stopTimeUpdateSlice)
 		if len(stopTimeUpdateSlice) <= 0 {
-			log.Println("LESS")
 			json, _ := json.Marshal("empty")
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(json)
 		}
 
-		unparsed, parsed := convertToTrainSliceAndParse(stopTimeUpdateSlice)
+		unparsed, parsed := utils.ConvertToTrainSliceAndParse(stopTimeUpdateSlice)
 		trains := unparsed
-		parsedTrains := defaultSort(parsed)
+		parsedTrains := utils.DefaultSort(parsed)
 
-		m := Message{Message: ArrivingTrain{
+		m := clientpool.Message{Message: types.UpcomingTrain{
 			Trains:       trains,
 			ParsedTrains: parsedTrains,
 		}}
@@ -81,9 +78,10 @@ func main() {
 
 	})
 
-	http.HandleFunc("/static", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(w, "Stations Endpoint")
 		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		json, _ := json.Marshal(staticData)
+		json, _ := json.Marshal(stations)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(json)
 	})

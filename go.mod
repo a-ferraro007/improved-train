@@ -1,4 +1,4 @@
-module github.com/mta
+module github.com/a-ferraro007/improved-train
 
 go 1.18
 

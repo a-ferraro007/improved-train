@@ -3,7 +3,8 @@
 
 nginx/
 
-mta
+/mta
+/main
 
 dhparam/
 mta-app.text

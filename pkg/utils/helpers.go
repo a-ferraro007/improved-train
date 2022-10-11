@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"log"
@@ -7,13 +7,15 @@ import (
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
+	"github.com/a-ferraro007/improved-train/pkg/types"
 )
 
-func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Train, ParsedByDirection) {
-	unparsed := make([]*Train, 0)
-	parsed := ParsedByDirection{Northbound: make([]*Train, 0), SouthBound: make([]*Train, 0)}
+//ConvertToTrainSliceAndParse Function
+func ConvertToTrainSliceAndParse(stopTimeUpdateSlice []*types.StopTimeUpdate) ([]*types.Train, types.ParsedByDirection) {
+	unparsed := make([]*types.Train, 0)
+	parsed := types.ParsedByDirection{Northbound: make([]*types.Train, 0), SouthBound: make([]*types.Train, 0)}
 	for _, trip := range stopTimeUpdateSlice {
-		train := &Train{}
+		train := &types.Train{}
 		train.Train = trip
 		if train.Train.ArrivalTime == nil {
 			continue
@@ -31,7 +33,7 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 			continue
 		}
 
-		idSplit := strings.Split(trip.Id, "")
+		idSplit := strings.Split(trip.ID, "")
 		direction := strings.ToLower(idSplit[len(idSplit)-1])
 
 		//Create helper for this to parse Northbound & Southbound trains
@@ -51,30 +53,26 @@ func convertToTrainSliceAndParse(stopTimeUpdateSlice []*StopTimeUpdate) ([]*Trai
 	return unparsed, parsed
 }
 
-//Get rid boolean return value
-func findStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *StopTimeUpdate) {
+//FindStopData Function
+func FindStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *types.StopTimeUpdate) {
 	match := false
-	stopTimeUpdate := StopTimeUpdate{}
+	stopTimeUpdate := types.StopTimeUpdate{}
 	if strings.Contains(update.GetStopId(), stopID) {
 		match = true
-		stopTimeUpdate.Id = update.GetStopId()
-		if update.Arrival != nil {
-			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-			if update.GetArrival().Delay != nil {
-				stopTimeUpdate.Delay = *update.GetArrival().Delay
-			}
-		}
-		if update.Departure != nil {
-			log.Println("UPDATE DEP", update)
-			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+		stopTimeUpdate.ID = update.GetStopId()
+		stopTimeUpdate.ArrivalTime = update.GetArrival().Time
+		stopTimeUpdate.DepartureTime = update.GetDeparture().Time
+		stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+		if update.Arrival.Delay != nil {
+			stopTimeUpdate.Delay = *update.GetArrival().Delay
 		}
 	}
 
 	return match, &stopTimeUpdate
 }
 
-func defaultSort(parsed ParsedByDirection) ParsedByDirection {
+//DefaultSort Function
+func DefaultSort(parsed types.ParsedByDirection) types.ParsedByDirection {
 	log.Println("DEFAULT SORT", len(parsed.Northbound))
 
 	sort.SliceStable(parsed.Northbound, func(i, j int) bool {
@@ -88,11 +86,13 @@ func defaultSort(parsed ParsedByDirection) ParsedByDirection {
 	return parsed
 }
 
-func descendingSort(parsed ParsedByDirection) ParsedByDirection {
+//DescendingSort Function
+func DescendingSort(parsed types.ParsedByDirection) types.ParsedByDirection {
 	log.Println("DESCENDING SORT", time.Now())
 	return parsed
 }
 
-func testGen(parsed ParsedByDirection) ParsedByDirection {
+//TestGen Function
+func TestGen(parsed types.ParsedByDirection) types.ParsedByDirection {
 	return parsed
 }
