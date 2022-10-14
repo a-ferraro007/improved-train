@@ -68,7 +68,9 @@ func FindStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, 
 
 		if update.GetArrival() != nil {
 			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-			stopTimeUpdate.Delay = *update.GetArrival().Delay
+			if update.GetArrival().Delay != nil {
+				stopTimeUpdate.Delay = *update.GetArrival().Delay
+			}
 		}
 	}
 
