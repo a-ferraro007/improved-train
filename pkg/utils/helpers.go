@@ -57,13 +57,17 @@ func ConvertToTrainSliceAndParse(stopTimeUpdateSlice []*types.StopTimeUpdate) ([
 func FindStopData(update *gtfs.TripUpdate_StopTimeUpdate, stopID string) (bool, *types.StopTimeUpdate) {
 	match := false
 	stopTimeUpdate := types.StopTimeUpdate{}
-	if strings.Contains(update.GetStopId(), stopID) {
+	if update != nil && strings.Contains(update.GetStopId(), stopID) {
 		match = true
 		stopTimeUpdate.ID = update.GetStopId()
-		stopTimeUpdate.ArrivalTime = update.GetArrival().Time
-		stopTimeUpdate.DepartureTime = update.GetDeparture().Time
-		stopTimeUpdate.GtfsDeparture = update.GetDeparture()
-		if update.Arrival.Delay != nil {
+
+		if update.GetDeparture() != nil {
+			stopTimeUpdate.DepartureTime = update.GetDeparture().Time
+			stopTimeUpdate.GtfsDeparture = update.GetDeparture()
+		}
+
+		if update.GetArrival() != nil {
+			stopTimeUpdate.ArrivalTime = update.GetArrival().Time
 			stopTimeUpdate.Delay = *update.GetArrival().Delay
 		}
 	}
