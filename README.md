@@ -1,4 +1,4 @@
-# Live MTA Subway Times 
+# Live MTA Subway Times
 
 ## *IN PROGRESS!*
 
