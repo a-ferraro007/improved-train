@@ -56,28 +56,28 @@ func (client *Client) read() {
 func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate) {
 	defer log.Default().Println("Closing write for ClientId: ", client.UUID)
 	log.Default().Println("Writing to ClientId: ", client.UUID)
-	stopTimeUpdates := make([]*types.StopTimeUpdate, 0)
-	nextTrain := &types.NextTrain{ClientID: client.UUID, SubwayLine: client.Config.SubwayLine}
-
+	nextTrain := types.NextTrain{ClientID: client.UUID, SubwayLine: client.Config.SubwayLine}
 	if len(*cachedGTFSData) != 0 {
+		stopTimeUpdates := make([]types.CombinedStopTimeUpdate, 0)
 		log.Default().Println("Cache Hit")
 		for _, tripUpdate := range *cachedGTFSData {
 			trip := tripUpdate.GetTrip()
 			for _, stopTime := range tripUpdate.GetStopTimeUpdate() {
-				stopTimeUpdate := types.StopTimeUpdate{}
-				if utils.ParseTripUpdate(trip, stopTime, &stopTimeUpdate, client.Config.StopID) {
-					stopTimeUpdates = append(stopTimeUpdates, &stopTimeUpdate)
+				stopTimeUpdate, err := utils.ParseTripUpdate(trip, stopTime, client.Config.StopID, client.Config.Minimal, client.Config.Headsigns)
+				if err == nil {
+					stopTimeUpdates = append(stopTimeUpdates, stopTimeUpdate)
 				}
 			}
 		}
 
 		if len(stopTimeUpdates) > 0 {
-			trainsByDirection := client.Config.Func(utils.ConvertToTrainSliceAndParse(stopTimeUpdates))
+			trainsByDirection := client.Config.SortFunc(utils.ConvertToTrainSliceAndParse(stopTimeUpdates))
 			nextTrain.TrainsByDirection = utils.ReturnLimit(trainsByDirection, client.Config.Limit)
+
 		}
 
 		for i := 0; i < 2; i++ {
-			client.writeJSON(Message{Client: client, Message: *nextTrain})
+			client.writeJSON(Message{Client: client, Message: nextTrain})
 		}
 	}
 
@@ -89,27 +89,28 @@ func (client *Client) write(cachedGTFSData *[]*gtfs.TripUpdate) {
 			return
 		}
 
-		nextTrain.Trains = make([]*types.Train, 0)
-		nextTrain.TrainsByDirection.North = make([]*types.Train, 0)
-		nextTrain.TrainsByDirection.South = make([]*types.Train, 0)
-		stopTimeUpdates = make([]*types.StopTimeUpdate, 0)
+		nextTrain.TrainsByDirection.North = make([]types.Train, 0)
+		nextTrain.TrainsByDirection.South = make([]types.Train, 0)
+		stopTimeUpdates := make([]types.CombinedStopTimeUpdate, 0)
 
 		for _, tripUpdate := range data {
 			trip := tripUpdate.GetTrip()
 			for _, stopTime := range tripUpdate.GetStopTimeUpdate() {
-				stopTimeUpdate := types.StopTimeUpdate{}
-				if utils.ParseTripUpdate(trip, stopTime, &stopTimeUpdate, client.Config.StopID) {
-					stopTimeUpdates = append(stopTimeUpdates, &stopTimeUpdate)
+				stopTimeUpdate, err := utils.ParseTripUpdate(trip, stopTime, client.Config.StopID, client.Config.Minimal, client.Config.Headsigns)
+				if err == nil {
+					stopTimeUpdates = append(stopTimeUpdates, stopTimeUpdate)
 				}
 			}
 		}
 
 		if len(stopTimeUpdates) > 0 {
-			trainsByDirection := client.Config.Func(utils.ConvertToTrainSliceAndParse(stopTimeUpdates))
+			trainsByDirection := client.Config.SortFunc(utils.ConvertToTrainSliceAndParse(stopTimeUpdates))
 			nextTrain.TrainsByDirection = utils.ReturnLimit(trainsByDirection, client.Config.Limit)
 		}
 
-		client.writeJSON(Message{Client: client, Message: *nextTrain})
+		println("IS MIN: ", client.Config.Minimal)
+		println("IS LIMIT: ", client.Config.Limit)
+		client.writeJSON(Message{Client: client, Message: nextTrain})
 	}
 }
 
@@ -136,9 +137,9 @@ func (client *Client) writeJSON(msg Message) {
 func (client *Client) SortConfig() {
 	switch client.Config.Sort {
 	case "descending":
-		client.Config.Func = utils.DescendingSort
+		client.Config.SortFunc = utils.DescendingSort
 	default:
-		client.Config.Func = utils.DefaultSort
+		client.Config.SortFunc = utils.DefaultSort
 	}
 }
 

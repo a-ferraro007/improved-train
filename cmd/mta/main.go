@@ -23,6 +23,7 @@ var upgrader = websocket.Upgrader{
 
 func main() {
 	log.Println("Train Time Server v0.3.0")
+	m := utils.CreateHeadSignsMap()
 	clientpool.Init()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,14 @@ func main() {
 
 		subwayLine := r.URL.Query().Get("subwayLine")
 		stopID := r.URL.Query().Get("stopID")
+		min := false
+		if r.URL.Query().Get("min") != "" {
+			var err error
+			min, err = strconv.ParseBool(r.URL.Query().Get("min"))
+			if err != nil {
+				log.Default().Println(err)
+			}
+		}
 
 		if stopID == "" {
 			log.Default().Println("Missing stopId")
@@ -55,7 +64,7 @@ func main() {
 			log.Default().Println("Limit Set: ", limit)
 		}
 
-		clientpool.HandleNewConnection(conn, subwayLine, stopID, limit)
+		clientpool.HandleNewConnection(conn, subwayLine, stopID, limit, min, m)
 	})
 
 	http.HandleFunc("/transit", func(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +72,14 @@ func main() {
 
 		subwayLine := r.URL.Query().Get("subwayLine")
 		stopID := r.URL.Query().Get("stopID")
+		min := false
+		if r.URL.Query().Get("min") != "" {
+			var err error
+			min, err = strconv.ParseBool(r.URL.Query().Get("min"))
+			if err != nil {
+				log.Default().Println(err)
+			}
+		}
 
 		if stopID == "" {
 			log.Default().Println("Missing stopId")
@@ -82,13 +99,14 @@ func main() {
 
 		data := utils.FetchTransitData(subwayLine)
 
-		stopTimeUpdates := make([]*types.StopTimeUpdate, 0)
+		stopTimeUpdates := make([]types.CombinedStopTimeUpdate, 0)
 		for _, tripUpdate := range data {
 			trip := tripUpdate.GetTrip()
+			// log.Default().Println(trip.GetTripId())
 			for _, stopTime := range tripUpdate.GetStopTimeUpdate() {
-				stopTimeUpdate := types.StopTimeUpdate{}
-				if utils.ParseTripUpdate(trip, stopTime, &stopTimeUpdate, stopID) {
-					stopTimeUpdates = append(stopTimeUpdates, &stopTimeUpdate)
+				stopTimeUpdate, err := utils.ParseTripUpdate(trip, stopTime, stopID, min, m)
+				if err == nil {
+					stopTimeUpdates = append(stopTimeUpdates, stopTimeUpdate)
 				}
 			}
 		}
@@ -107,7 +125,6 @@ func main() {
 			log.Default().Println("Limit Set: ", limit)
 		}
 
-		// // m := clientpool.Message{Message: types.NextTrain{TrainsByDirection: trainsByDirection}}
 		trainsByDirection := utils.ReturnLimit(utils.DefaultSort(utils.ConvertToTrainSliceAndParse(stopTimeUpdates)), limit)
 		json, _ := json.Marshal(trainsByDirection)
 		w.Header().Set("Content-Type", "application/json")

@@ -34,10 +34,10 @@ func FetchTransitData(subwayLine string) []*gtfs.TripUpdate {
 		return tripUpdates
 	}
 
-	return parseTripUpdates(body, tripUpdates)
+	return parseResponse(body, tripUpdates)
 }
 
-func parseTripUpdates(body []byte, tripUpdates []*gtfs.TripUpdate) []*gtfs.TripUpdate {
+func parseResponse(body []byte, tripUpdates []*gtfs.TripUpdate) []*gtfs.TripUpdate {
 	feed := gtfs.FeedMessage{}
 
 	err := proto.Unmarshal(body, &feed)
