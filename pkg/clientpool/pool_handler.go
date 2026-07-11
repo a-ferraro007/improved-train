@@ -27,13 +27,13 @@ func Init() {
 }
 
 // HandleNewConnection Function
-func HandleNewConnection(conn *websocket.Conn, subwayLine string, stopID string, limit int) {
+func HandleNewConnection(conn *websocket.Conn, subwayLine string, stopID string, limit int, min bool, m map[string]string) {
 	if Pools.Map[subwayLine] == nil {
 		log.Default().Println("Creating Pool for: ", subwayLine)
 		createPool(subwayLine)
-		insertIntoPool(conn, subwayLine, stopID, limit)
+		insertIntoPool(conn, subwayLine, stopID, limit, min, m)
 	} else {
-		insertIntoPool(conn, subwayLine, stopID, limit)
+		insertIntoPool(conn, subwayLine, stopID, limit, min, m)
 	}
 }
 
@@ -49,7 +49,7 @@ func createPool(subwayLine string) *Pool {
 	return pool
 }
 
-func insertIntoPool(conn *websocket.Conn, subwayLine string, stopID string, limit int) {
+func insertIntoPool(conn *websocket.Conn, subwayLine string, stopID string, limit int, min bool, m map[string]string) {
 	Pools.Mutex.Lock()
 	defer Pools.Mutex.Unlock()
 	pool := Pools.Map[subwayLine]
@@ -61,7 +61,7 @@ func insertIntoPool(conn *websocket.Conn, subwayLine string, stopID string, limi
 		Send:       make(chan []*gtfs.TripUpdate),
 		StopID:     stopID,
 		SubwayLine: subwayLine,
-		Config:     types.Config{StopID: stopID, SubwayLine: subwayLine, Sort: "ascending", Limit: limit},
+		Config:     types.Config{StopID: stopID, SubwayLine: subwayLine, Sort: "ascending", Limit: limit, Minimal: min, Headsigns: m},
 		Fetching:   false,
 	}
 	client.SortConfig()
